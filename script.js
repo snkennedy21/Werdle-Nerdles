@@ -17,11 +17,12 @@ const boardRow6 = document.querySelector(".board__row__6");
 let guessArray = [];
 let answerArray = ["W", "A", "T", "E", "R"];
 
-let rowIndex = 4;
+let rowIndex = 0;
 
 let tiles = boardRows[rowIndex].querySelectorAll(".board__tile");
 
 const updateTiles = function () {
+  rowIndex++;
   tiles = boardRows[rowIndex].querySelectorAll(".board__tile");
 };
 
@@ -64,6 +65,6 @@ keyboardButtonEnter.addEventListener("click", function () {
       }
     });
     guessArray = [];
-    updateBoardRow();
+    updateTiles();
   }
 });
