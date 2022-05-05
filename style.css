@@ -1,0 +1,117 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 62.5%;
+}
+
+.header {
+  position: relative;
+  font-size: 1.8rem;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 0.5px solid grey;
+}
+
+.header__title {
+  text-align: center;
+}
+
+.header__icon-container__1 {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+}
+
+.header__icon-container__2 {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+}
+
+.header__icon {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* ///////// */
+/* Boardgame */
+/* ///////// */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.board__row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.board__tile {
+  width: 5.5rem;
+  height: 5.5rem;
+  border: 2px solid #d2d4d9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 3rem;
+}
+
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.keyboard__row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.keyboard__button {
+  width: 4.5rem;
+  height: 6rem;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: #d2d4d9;
+}
+
+.keyboard__button:hover {
+  cursor: pointer;
+}
+
+.keyboard__button--enter,
+.keyboard__button--backspace {
+  width: 7rem;
+  height: 6rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: #d2d4d9;
+}
+
+.keyboard__button--enter:hover,
+.keyboard__button--backspace:hover {
+  cursor: pointer;
+}
+
+.backspace__icon {
+  width: 3rem;
+  height: 3rem;
+}
