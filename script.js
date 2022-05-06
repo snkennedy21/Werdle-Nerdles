@@ -18,9 +18,18 @@ class App {
   #playerGuessMatchesTheAnswer = false;
   #currentRowOfPlay;
   #allTilesInCurrentRowOfPlay;
+  #arrayOfAllKeyboardValues = [];
+  #keyPressedIsNotAcceptable = true;
   constructor() {
+    this._buildArrayOfAllKeyboardValues();
     keyboard.addEventListener("click", this._playTheGame.bind(this));
     window.addEventListener("keydown", this._playTheGame.bind(this));
+  }
+
+  _buildArrayOfAllKeyboardValues() {
+    keyboardButons.forEach((el) => {
+      this.#arrayOfAllKeyboardValues.push(el.value);
+    });
   }
 
   _playTheGame(e) {
@@ -29,7 +38,6 @@ class App {
     this._identifyWhichKeyWasPressed(e);
     if (this.#pressedKey === "Enter") {
       this._checkIfGuessArrayIsFull();
-      console.log(this.#guessArray);
       if (!this.#guessArrayIsFull) alert("not complete word");
       if (this.#guessArrayIsFull) {
         this._submitPlayerGuess();
@@ -41,12 +49,16 @@ class App {
       this._removeLastLetterFromGuessArray();
       console.log(this.#guessArray);
       this._setTheTextContentForTilesInCurrentRowOfPlay();
+      this._checkIfGuessArrayIsFull();
     }
     if (this.#pressedKey !== "Enter" && this.#pressedKey !== "Backspace") {
+      console.log(this.#pressedKey);
       this._addLetterOfPressedKeyToGuessArray();
-      console.log(this.#guessArray);
+      if (this.#keyPressedIsNotAcceptable)
+        this._removeLastLetterFromGuessArray();
       this._checkIfGuessArrayIsFull();
       if (this.#guessArrayIsFull) this._stopAddingLettersToGuessArray();
+      console.log(this.#guessArray);
       this._setTheTextContentForTilesInCurrentRowOfPlay();
     }
   }
@@ -94,12 +106,32 @@ class App {
     this.#guessArray.pop();
   }
 
+  _checkifKeyPressedIsAcceptable(e) {
+    if (
+      this.#arrayOfAllKeyboardValues.includes(
+        e.key[0].toUpperCase() + e.key.slice(1)
+      )
+    ) {
+      this.#pressedKey = e.key[0].toUpperCase() + e.key.slice(1);
+      this.#keyPressedIsNotAcceptable = false;
+    }
+    if (
+      !this.#arrayOfAllKeyboardValues.includes(
+        e.key[0].toUpperCase() + e.key.slice(1)
+      )
+    ) {
+      this.#pressedKey = " ";
+      this.#keyPressedIsNotAcceptable = true;
+    }
+  }
+
   _identifyWhichKeyWasPressed(e) {
     e.preventDefault();
     if (e.type === "keydown") {
-      this.#pressedKey = e.key[0].toUpperCase() + e.key.slice(1);
+      this._checkifKeyPressedIsAcceptable(e);
     }
     if (e.type === "click") {
+      this.#keyPressedIsNotAcceptable = false;
       this.#pressedKey = e.target.closest(".keyboard__button").value;
     }
   }
