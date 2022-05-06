@@ -37,6 +37,10 @@ html {
   height: 3rem;
 }
 
+.header__icon:hover {
+  cursor: pointer;
+}
+
 /* ///////// */
 /* Boardgame */
 /* ///////// */
