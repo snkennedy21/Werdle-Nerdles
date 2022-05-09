@@ -4,8 +4,15 @@
   box-sizing: border-box;
 }
 
+:root {
+  --color-green: #68a868;
+  --color-yellow: #d0b363;
+  --color-grey: #ffc425;
+}
+
 html {
   font-size: 62.5%;
+  font-family: sans-serif;
 }
 
 .header {
@@ -87,6 +94,7 @@ html {
   width: 100%;
   position: absolute;
   border: 2px solid #d2d4d9;
+  font-weight: 700;
 }
 
 .front {
@@ -127,6 +135,7 @@ html {
   border: none;
   border-radius: 0.5rem;
   background-color: #d2d4d9;
+  font-weight: 600;
 }
 
 .keyboard__button:hover {
