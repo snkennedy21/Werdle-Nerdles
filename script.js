@@ -2333,6 +2333,8 @@ const acceptableWordList = [
 ];
 
 class App {
+  #singlePlayerGame = true;
+  #theGameIsNotActive = false;
   #guessArray = [];
   #answerArray = [];
   #rowIndex = 0;
@@ -2347,6 +2349,8 @@ class App {
   #arrayOfAllKeyboardValues = [];
   #keyPressedIsNotAcceptable = true;
   #randomNumber;
+  #guessIsAnAcceptableWord = true;
+
   constructor() {
     this._resetGame();
     this._buildArrayOfAllKeyboardValues();
@@ -2354,12 +2358,54 @@ class App {
     window.addEventListener("keydown", this._playTheGame.bind(this));
   }
 
+  _playTheGame(e) {
+    if (this.#theGameIsNotActive) return;
+
+    this._identifyCurrentRowOfPlay();
+    this._selectTilesInCurrentRowOfPlay();
+    this._identifyWhichKeyWasPressed(e);
+
+    if (this.#pressedKey === "Enter") {
+      this._checkIfGuessArrayIsFull();
+      if (!this.#guessArrayIsFull) this._shakeCurrentRowOfPlay();
+      if (this.#guessArrayIsFull) {
+        this._checkIfGuessIsAnAcceptableWord();
+        if (!this.#guessIsAnAcceptableWord) this._shakeCurrentRowOfPlay();
+        if (this.#guessIsAnAcceptableWord) {
+          this._submitPlayerGuess();
+          if (this.#playerGuessMatchesTheAnswer) {
+            this._endTheGame();
+          }
+          if (!this.#playerGuessMatchesTheAnswer) {
+            this._moveToTheNextRowOfPlay();
+            this._resetGuessArrayToEmpty();
+          }
+        }
+      }
+    }
+
+    if (this.#pressedKey === "Backspace") {
+      this._removeLastLetterFromGuessArray();
+      this._setTheTextContentForTilesInCurrentRowOfPlay();
+      this._checkIfGuessArrayIsFull();
+    }
+
+    if (this.#pressedKey !== "Enter" && this.#pressedKey !== "Backspace") {
+      this._addLetterOfPressedKeyToGuessArray();
+      if (this.#keyPressedIsNotAcceptable)
+        this._removeLastLetterFromGuessArray();
+      this._checkIfGuessArrayIsFull();
+      if (this.#guessArrayIsFull) this._stopAddingLettersToGuessArray();
+      this._setTheTextContentForTilesInCurrentRowOfPlay();
+    }
+  }
+
   _setAnswerFromWordList() {
     this.#answerArray = [];
     this.#randomNumber = Math.floor(Math.random() * 2316) + 1;
     const answer = acceptableWordList[this.#randomNumber];
     [...answer].forEach((el) => this.#answerArray.push(el));
-    console.log(this.#answerArray);
+    console.log([...answer]);
   }
 
   _resetBoardTiles() {
@@ -2373,14 +2419,34 @@ class App {
       tile.textContent = "";
     });
     this.#rowIndex = 0;
+    this.#guessArray = [];
   }
 
   _resetGame() {
+    this.#theGameIsNotActive = false;
+    this._setAnswerFromWordList();
+    this._resetBoardTiles();
     setInterval(() => {
-      this.#answerArray = [];
+      this.#theGameIsNotActive = false;
       this._setAnswerFromWordList();
       this._resetBoardTiles();
-    }, 5000);
+    }, 20000);
+  }
+
+  _checkIfGuessIsAnAcceptableWord() {
+    if (!acceptableWordList.includes(this.#guessArray.join(""))) {
+      this.#guessIsAnAcceptableWord = false;
+    }
+    if (acceptableWordList.includes(this.#guessArray.join(""))) {
+      this.#guessIsAnAcceptableWord = true;
+    }
+  }
+
+  _shakeCurrentRowOfPlay() {
+    this.#currentRowOfPlay.style.animation = "shake 0.3s linear";
+    setTimeout(() => {
+      this.#currentRowOfPlay.style.animation = "";
+    }, 400);
   }
 
   _buildArrayOfAllKeyboardValues() {
@@ -2389,38 +2455,22 @@ class App {
     });
   }
 
-  _playTheGame(e) {
-    this._identifyCurrentRowOfPlay();
-    this._selectTilesInCurrentRowOfPlay();
-    this._identifyWhichKeyWasPressed(e);
-    if (this.#pressedKey === "Enter") {
-      this._checkIfGuessArrayIsFull();
-      if (!this.#guessArrayIsFull) alert("not complete word");
-      if (this.#guessArrayIsFull) {
-        this._submitPlayerGuess();
-        this._increaseRowIndex();
-        this._resetGuessArrayToEmpty();
-      }
-    }
-    if (this.#pressedKey === "Backspace") {
-      this._removeLastLetterFromGuessArray();
-      console.log(this.#guessArray);
-      this._setTheTextContentForTilesInCurrentRowOfPlay();
-      this._checkIfGuessArrayIsFull();
-    }
-    if (this.#pressedKey !== "Enter" && this.#pressedKey !== "Backspace") {
-      console.log(this.#pressedKey);
-      this._addLetterOfPressedKeyToGuessArray();
-      if (this.#keyPressedIsNotAcceptable)
-        this._removeLastLetterFromGuessArray();
-      this._checkIfGuessArrayIsFull();
-      if (this.#guessArrayIsFull) this._stopAddingLettersToGuessArray();
-      console.log(this.#guessArray);
-      this._setTheTextContentForTilesInCurrentRowOfPlay();
-    }
+  _endTheGame() {
+    this.#allTileContainersInCurrentRowOfPlay.forEach((tile, i) => {
+      setTimeout(() => {
+        tile.style.animation = `jump 0.5s ease-in-out ${i / 7}s`;
+      }, 2200);
+      setTimeout(() => {
+        tile.style.animation = ``;
+      }, 4000);
+    });
+    this.#theGameIsNotActive = true;
   }
 
   _checkIfPlayerGuessMatchesTheAnswer() {
+    if (!this.#guessArray.every((el, i) => el === this.#answerArray[i])) {
+      this.#playerGuessMatchesTheAnswer = false;
+    }
     if (this.#guessArray.every((el, i) => el === this.#answerArray[i])) {
       this.#playerGuessMatchesTheAnswer = true;
     }
@@ -2464,7 +2514,7 @@ class App {
     this.#guessArray = [];
   }
 
-  _increaseRowIndex() {
+  _moveToTheNextRowOfPlay() {
     this.#rowIndex++;
   }
 
