@@ -7,6 +7,11 @@ const keyboardButtonBackspace = document.querySelector(
   ".keyboard__button--backspace"
 );
 const keyboardButtonEnter = document.querySelector(".keyboard__button--enter");
+const frontOfBoardTiles = document.querySelectorAll(".front");
+const backOfBoardTiles = document.querySelectorAll(".back");
+const boardTileContainers = document.querySelectorAll(
+  ".board__tile__container"
+);
 
 class App {
   #guessArray = [];
@@ -17,7 +22,9 @@ class App {
   #guessArrayIsFull = false;
   #playerGuessMatchesTheAnswer = false;
   #currentRowOfPlay;
-  #allTilesInCurrentRowOfPlay;
+  #allTileContainersInCurrentRowOfPlay;
+  #frontOfAllTilesInCurrentRowOfPlay;
+  #backOfAllTilesInCurrentRowOfPlay;
   #arrayOfAllKeyboardValues = [];
   #keyPressedIsNotAcceptable = true;
   constructor() {
@@ -69,8 +76,16 @@ class App {
     }
   }
 
+  _flipTiles() {
+    this.#allTileContainersInCurrentRowOfPlay.forEach((el, i) => {
+      setTimeout(() => {
+        el.classList.add("flip");
+      }, i * 300);
+    });
+  }
+
   _updateTileColors() {
-    this.#allTilesInCurrentRowOfPlay.forEach((tile, i) => {
+    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
       if (tile.textContent !== this.#answerArray[i]) {
         tile.style.backgroundColor = "grey";
         tile.style.color = "white";
@@ -91,6 +106,7 @@ class App {
 
   _submitPlayerGuess() {
     this._updateTileColors();
+    this._flipTiles();
     this._checkIfPlayerGuessMatchesTheAnswer();
   }
 
@@ -154,12 +170,19 @@ class App {
   }
 
   _selectTilesInCurrentRowOfPlay() {
-    this.#allTilesInCurrentRowOfPlay =
-      this.#currentRowOfPlay.querySelectorAll(".board__tile");
+    this.#frontOfAllTilesInCurrentRowOfPlay =
+      this.#currentRowOfPlay.querySelectorAll(".front");
+    this.#backOfAllTilesInCurrentRowOfPlay =
+      this.#currentRowOfPlay.querySelectorAll(".back");
+    this.#allTileContainersInCurrentRowOfPlay =
+      this.#currentRowOfPlay.querySelectorAll(".board__tile__container");
   }
 
   _setTheTextContentForTilesInCurrentRowOfPlay() {
-    this.#allTilesInCurrentRowOfPlay.forEach((tile, i) => {
+    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+      tile.textContent = this.#guessArray[i];
+    });
+    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
       tile.textContent = this.#guessArray[i];
     });
   }
