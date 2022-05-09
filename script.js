@@ -2,7 +2,7 @@
 const boardTiles = document.querySelectorAll(".board__tile");
 const allBoardRows = document.querySelectorAll(".board__row");
 const keyboard = document.querySelector(".keyboard");
-const keyboardButons = document.querySelectorAll(".keyboard__button");
+const keyboardButtons = document.querySelectorAll(".keyboard__button");
 const keyboardButtonBackspace = document.querySelector(
   ".keyboard__button--backspace"
 );
@@ -2422,14 +2422,23 @@ class App {
     this.#guessArray = [];
   }
 
+  _resetKeyboard() {
+    keyboardButtons.forEach((button) => {
+      button.style.backgroundColor = "#d2d4d9";
+      button.style.color = "black";
+    });
+  }
+
   _resetGame() {
     this.#theGameIsNotActive = false;
     this._setAnswerFromWordList();
     this._resetBoardTiles();
+    this._resetKeyboard();
     setInterval(() => {
       this.#theGameIsNotActive = false;
       this._setAnswerFromWordList();
       this._resetBoardTiles();
+      this._resetKeyboard();
     }, 20000);
   }
 
@@ -2450,7 +2459,7 @@ class App {
   }
 
   _buildArrayOfAllKeyboardValues() {
-    keyboardButons.forEach((el) => {
+    keyboardButtons.forEach((el) => {
       this.#arrayOfAllKeyboardValues.push(el.value);
     });
   }
@@ -2501,6 +2510,12 @@ class App {
         tile.style.color = "white";
         tile.style.border = "none";
       }
+      keyboardButtons.forEach((button) => {
+        if (button.value === tile.textContent) {
+          button.style.backgroundColor = tile.style.backgroundColor;
+          button.style.color = "white";
+        }
+      });
     });
   }
 
