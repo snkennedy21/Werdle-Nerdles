@@ -15,12 +15,12 @@
     <header>
       <div class="header">
         <div class="header__icon-container__1">
-          <ion-icon class="header__icon header__icon__rules" name="help-circle-outline"></ion-icon>
+          <ion-icon class="header__icon header__rules-icon" name="help-circle-outline"></ion-icon>
         </div>
         <h1 class="header__title">Werdle 4 Nerdles</h1>
         <div class="header__icon-container__2">
-          <ion-icon class="header__icon" name="stats-chart-outline"></ion-icon>
-          <ion-icon class="header__icon header__icon__settings" name="settings-outline"></ion-icon>
+          <ion-icon class="header__icon header__statistics-icon" name="stats-chart-outline"></ion-icon>
+          <ion-icon class="header__icon header__settings-icon" name="settings-outline"></ion-icon>
         </div>
       </div>
     </header>
@@ -325,11 +325,11 @@
       </div>
     </section>
 
-    <section class="rules-modal__container invisible">
+    <section class="modal__container invisible">
       <div class="settings-modal">
         <div class="settings-modal__header">
           <h1 class="settings-modal__title">Settings</h1>
-          <ion-icon class="settings-modal__close-icon" class="rules-modal__close-icon" name="close-outline"></ion-icon>
+          <ion-icon class="settings-modal__close-icon" name="close-outline"></ion-icon>
         </div>
         <div class="settings-modal__intro"></div>
         <div class="settings-modal__section">
@@ -414,22 +414,52 @@
 
           <div class="example">
             <div class="example__div-container">
-              <div class="example__div front-border">S</div>
-              <div class="example__div front-border">A</div>
-              <div class="example__div front-border">N</div>
+              <div class="example__div front-border">P</div>
+              <div class="example__div front-border">O</div>
+              <div class="example__div front-border">I</div>
               <div class="example__div-flip">
                 <div class="example__div">
                   <div class="example__front"></div>
-                  <div class="example__back example__back--grey">D</div>
+                  <div class="example__back example__back--grey">N</div>
                 </div>
               </div>
-              <div class="example__div front-border">Y</div>
+              <div class="example__div front-border">T</div>
             </div>
 
             <p class="example__text">You know what this means you <strong>NERDLE</strong></p>
           </div>
         </div>
         <p class="rules__modal__footer">New WERLDE every hour for NERDLES</p>
+      </div>
+    </section>
+
+    <section class="statistics-modal__container invisible">
+      <div class="statistics-modal">
+        <div class="statistics-modal__close-icon__container">
+          <ion-icon class="statistics-modal__close-icon" name="close-outline"></ion-icon>
+        </div>
+        <h1 class="statistics-modal__title">STATISTICS</h1>
+        <div class="statistics-modal__stats-container">
+          <div class="statistics-modal__stat-box">
+            <p class="statistics-modal__stat">0</p>
+            <p class="statistics-modal__stat-description">Played</p>
+          </div>
+          <div class="statistics-modal__stat-box">
+            <p class="statistics-modal__stat">0</p>
+            <p class="statistics-modal__stat-description">Win %</p>
+          </div>
+          <div class="statistics-modal__stat-box">
+            <p class="statistics-modal__stat">0</p>
+            <p class="statistics-modal__stat-description">Current</p>
+            <p class="statistics-modal__stat-description">Streak</p>
+          </div>
+          <div class="statistics-modal__stat-box">
+            <p class="statistics-modal__stat">0</p>
+            <p class="statistics-modal__stat-description">Max</p>
+            <p class="statistics-modal__stat-description">Streak</p>
+          </div>
+        </div>
+        <h2 class="statistics-modal__title">GUESS DISTRIBUTION</h2>
       </div>
     </section>
   </div>

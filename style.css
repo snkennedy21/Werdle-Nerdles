@@ -14,6 +14,10 @@ html {
   font-family: sans-serif;
 }
 
+body {
+  overflow-y: hidden;
+}
+
 .header {
   position: relative;
   font-size: 1.8rem;
@@ -36,6 +40,8 @@ html {
   position: absolute;
   right: 1rem;
   top: 1rem;
+  display: flex;
+  gap: 1rem;
 }
 
 .header__icon {
@@ -145,12 +151,12 @@ html {
 
 .keyboard__row {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .keyboard__button {
   width: 4.5rem;
-  height: 6rem;
+  height: 5.8rem;
   border: none;
   border-radius: 0.5rem;
   background-color: #d2d4d9;
@@ -164,7 +170,7 @@ html {
 .keyboard__button--enter,
 .keyboard__button--backspace {
   width: 7rem;
-  height: 6rem;
+  height: 5.8rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -235,7 +241,7 @@ html {
 /* Introduction Modal */
 /* ////////////////// */
 
-.rules-modal__container {
+.modal__container {
   top: 0;
   position: absolute;
   width: 100%;
@@ -279,6 +285,11 @@ html {
   transform: translateY(-50%);
   width: 3rem;
   height: 3rem;
+}
+
+.rules-modal__close-icon:hover,
+.settings-modal__close-icon:hover {
+  cursor: pointer;
 }
 
 .rules-modal__intro {
@@ -450,6 +461,75 @@ input:checked + .slider:before {
   -webkit-transform: translateX(1.5rem);
   -ms-transform: translateX(1.5rem);
   transform: translateX(1.5rem);
+}
+
+.statistics-modal__container {
+  top: 0;
+  position: absolute;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s linear;
+}
+
+.statistics-modal {
+  width: 50rem;
+  height: 36rem;
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.122);
+  padding: 1rem;
+  margin-top: 2rem;
+  transition: all 0.2s linear;
+}
+
+.statistics-modal.transform-up {
+  transform: translateY(-2rem);
+}
+
+.statistics-modal__close-icon__container {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.statistics-modal__close-icon {
+  width: 3rem;
+  height: 3rem;
+}
+
+.statistics-modal__close-icon:hover {
+  cursor: pointer;
+}
+
+.statistics-modal__title {
+  text-align: center;
+  font-size: 1.6rem;
+  padding-bottom: 1.5rem;
+}
+
+.statistics-modal__stats-container {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding-bottom: 2rem;
+}
+
+.statistics-modal__stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statistics-modal__stat {
+  font-size: 3.6rem;
+}
+
+.statistics-modal__stat-description {
+  font-size: 1.2rem;
 }
 
 .invisible {

@@ -20,15 +20,23 @@ const errorMessageInvalidWord = document.querySelector(
   ".error__message--invalid"
 );
 const rulesModalCloseIcon = document.querySelector(".rules-modal__close-icon");
-const headerIconRules = document.querySelector(".header__icon__rules");
-const rulesModalContainer = document.querySelector(".rules-modal__container");
+const headerIconRules = document.querySelector(".header__rules-icon");
+const modalContainer = document.querySelector(".modal__container");
 const rulesModal = document.querySelector(".rules-modal");
 const exampleDivFlips = document.querySelectorAll(".example__div-flip");
 const exampleBack = document.querySelector(".example__back");
-const headerIconSettings = document.querySelector(".header__icon__settings");
+const headerIconSettings = document.querySelector(".header__settings-icon");
 const settingsModal = document.querySelector(".settings-modal");
 const settingsModalCloseIcon = document.querySelector(
   ".settings-modal__close-icon"
+);
+const headerIconStatistics = document.querySelector(".header__statistics-icon");
+const statisticsModalContainer = document.querySelector(
+  ".statistics-modal__container"
+);
+const statisticsModal = document.querySelector(".statistics-modal");
+const statisticsModalCloseIcon = document.querySelector(
+  ".statistics-modal__close-icon"
 );
 
 class App {
@@ -62,11 +70,24 @@ class App {
       "click",
       this._toggleModal.bind(this)
     );
+    headerIconStatistics.addEventListener(
+      "click",
+      this._toggleStatisticsModal.bind(this)
+    );
+    statisticsModalCloseIcon.addEventListener(
+      "click",
+      this._toggleStatisticsModal.bind(this)
+    );
+  }
+
+  _toggleStatisticsModal() {
+    statisticsModalContainer.classList.toggle("invisible");
+    statisticsModal.classList.toggle("transform-up");
   }
 
   _toggleModal(e) {
-    rulesModalContainer.classList.toggle("invisible");
-    if (e.target.classList.contains("header__icon__rules")) {
+    modalContainer.classList.toggle("invisible");
+    if (e.target.classList.contains("header__rules-icon")) {
       settingsModal.classList.toggle("hidden");
       rulesModal.classList.toggle("translate-up");
       setTimeout(() => {
@@ -85,7 +106,7 @@ class App {
       }, 200);
     }
     if (
-      e.target.classList.contains("header__icon__settings") ||
+      e.target.classList.contains("header__settings-icon") ||
       e.target.classList.contains("settings-modal__close-icon")
     ) {
       settingsModal.classList.toggle("translate-up");
@@ -269,12 +290,14 @@ class App {
         tile.style.backgroundColor = "#68a868";
         tile.style.color = "white";
       }
-      keyboardButtons.forEach((button) => {
-        if (button.value === tile.textContent) {
-          button.style.backgroundColor = tile.style.backgroundColor;
-          button.style.color = "white";
-        }
-      });
+      setTimeout(() => {
+        keyboardButtons.forEach((button) => {
+          if (button.value === tile.textContent) {
+            button.style.backgroundColor = tile.style.backgroundColor;
+            button.style.color = "white";
+          }
+        });
+      }, 2200);
     });
   }
 
