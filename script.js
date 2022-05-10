@@ -25,6 +25,343 @@ const rulesModalContainer = document.querySelector(".rules-modal__container");
 const rulesModal = document.querySelector(".rules-modal");
 const exampleDivFlips = document.querySelectorAll(".example__div-flip");
 const exampleBack = document.querySelector(".example__back");
+const headerIconSettings = document.querySelector(".header__icon__settings");
+const settingsModal = document.querySelector(".settings-modal");
+const settingsModalCloseIcon = document.querySelector(
+  ".settings-modal__close-icon"
+);
+
+class App {
+  #singlePlayerGame = true;
+  #theGameIsNotActive = false;
+  #guessArray = [];
+  #answerArray = [];
+  #rowIndex = 0;
+  #tiles;
+  #pressedKey;
+  #guessArrayIsFull = false;
+  #playerGuessMatchesTheAnswer = false;
+  #currentRowOfPlay;
+  #allTileContainersInCurrentRowOfPlay;
+  #frontOfAllTilesInCurrentRowOfPlay;
+  #backOfAllTilesInCurrentRowOfPlay;
+  #arrayOfAllKeyboardValues = [];
+  #keyPressedIsNotAcceptable = true;
+  #randomNumber;
+  #guessIsAnAcceptableWord = true;
+
+  constructor() {
+    this._resetGame();
+    this._buildArrayOfAllKeyboardValues();
+    keyboard.addEventListener("click", this._playTheGame.bind(this));
+    window.addEventListener("keydown", this._playTheGame.bind(this));
+    headerIconRules.addEventListener("click", this._toggleModal.bind(this));
+    headerIconSettings.addEventListener("click", this._toggleModal.bind(this));
+    rulesModalCloseIcon.addEventListener("click", this._toggleModal.bind(this));
+    settingsModalCloseIcon.addEventListener(
+      "click",
+      this._toggleModal.bind(this)
+    );
+  }
+
+  _toggleModal(e) {
+    rulesModalContainer.classList.toggle("invisible");
+    if (e.target.classList.contains("header__icon__rules")) {
+      settingsModal.classList.toggle("hidden");
+      rulesModal.classList.toggle("translate-up");
+      setTimeout(() => {
+        exampleDivFlips.forEach((el) => {
+          el.classList.toggle("flip");
+        });
+      }, 200);
+    }
+    if (e.target.classList.contains("rules-modal__close-icon")) {
+      rulesModal.classList.toggle("translate-up");
+      setTimeout(() => {
+        settingsModal.classList.toggle("hidden");
+        exampleDivFlips.forEach((el) => {
+          el.classList.toggle("flip");
+        });
+      }, 200);
+    }
+    if (
+      e.target.classList.contains("header__icon__settings") ||
+      e.target.classList.contains("settings-modal__close-icon")
+    ) {
+      settingsModal.classList.toggle("translate-up");
+    }
+  }
+
+  _displayErrorMessageInvalidWord() {
+    errorMessageInvalidWord.classList.remove("hidden");
+    setTimeout(() => {
+      errorMessageInvalidWord.classList.add("hidden");
+    }, 1000);
+  }
+
+  _displayErrorMessageWordTooShort() {
+    errorMessageWordTooShort.classList.remove("hidden");
+    setTimeout(() => {
+      errorMessageWordTooShort.classList.add("hidden");
+    }, 1000);
+  }
+
+  _displaySuccessMessage() {
+    successMessage.classList.remove("hidden");
+    setTimeout(() => {
+      successMessage.classList.add("hidden");
+    }, 1000);
+  }
+
+  _playTheGame(e) {
+    if (this.#theGameIsNotActive) return;
+
+    this._identifyCurrentRowOfPlay();
+    this._selectTilesInCurrentRowOfPlay();
+    this._identifyWhichKeyWasPressed(e);
+
+    if (this.#pressedKey === "Enter") {
+      this._checkIfGuessArrayIsFull();
+      if (!this.#guessArrayIsFull) {
+        this._shakeCurrentRowOfPlay();
+        this._displayErrorMessageWordTooShort();
+      }
+      if (this.#guessArrayIsFull) {
+        this._checkIfGuessIsAnAcceptableWord();
+        if (!this.#guessIsAnAcceptableWord) {
+          this._shakeCurrentRowOfPlay();
+          this._displayErrorMessageInvalidWord();
+        }
+        if (this.#guessIsAnAcceptableWord) {
+          this._submitPlayerGuess();
+          if (this.#playerGuessMatchesTheAnswer) {
+            this._endTheGame();
+          }
+          if (!this.#playerGuessMatchesTheAnswer) {
+            this._moveToTheNextRowOfPlay();
+            this._resetGuessArrayToEmpty();
+          }
+        }
+      }
+    }
+
+    if (this.#pressedKey === "Backspace") {
+      this._removeLastLetterFromGuessArray();
+      this._setTheTextContentForTilesInCurrentRowOfPlay();
+      this._checkIfGuessArrayIsFull();
+    }
+
+    if (this.#pressedKey !== "Enter" && this.#pressedKey !== "Backspace") {
+      this._addLetterOfPressedKeyToGuessArray();
+      if (this.#keyPressedIsNotAcceptable)
+        this._removeLastLetterFromGuessArray();
+      this._checkIfGuessArrayIsFull();
+      if (this.#guessArrayIsFull) this._stopAddingLettersToGuessArray();
+      this._setTheTextContentForTilesInCurrentRowOfPlay();
+    }
+  }
+
+  _setAnswerFromWordList() {
+    this.#answerArray = [];
+    this.#randomNumber = Math.floor(Math.random() * 2316) + 1;
+    const answer = acceptableWordList[this.#randomNumber];
+    [...answer].forEach((el) => this.#answerArray.push(el));
+    console.log([...answer]);
+  }
+
+  _resetBoardTiles() {
+    boardTileContainers.forEach((tile) => {
+      tile.classList.remove("flip");
+    });
+    frontOfBoardTiles.forEach((tile) => {
+      tile.textContent = "";
+    });
+    backOfBoardTiles.forEach((tile) => {
+      tile.textContent = "";
+    });
+    this.#rowIndex = 0;
+    this.#guessArray = [];
+  }
+
+  _resetKeyboard() {
+    keyboardButtons.forEach((button) => {
+      button.style.backgroundColor = "#d2d4d9";
+      button.style.color = "black";
+    });
+  }
+
+  _resetGame() {
+    this.#theGameIsNotActive = false;
+    this._setAnswerFromWordList();
+    this._resetBoardTiles();
+    this._resetKeyboard();
+    setInterval(() => {
+      this.#theGameIsNotActive = false;
+      this._setAnswerFromWordList();
+      this._resetBoardTiles();
+      this._resetKeyboard();
+    }, 20000);
+  }
+
+  _checkIfGuessIsAnAcceptableWord() {
+    if (!acceptableWordList.includes(this.#guessArray.join(""))) {
+      this.#guessIsAnAcceptableWord = false;
+    }
+    if (acceptableWordList.includes(this.#guessArray.join(""))) {
+      this.#guessIsAnAcceptableWord = true;
+    }
+  }
+
+  _shakeCurrentRowOfPlay() {
+    this.#currentRowOfPlay.style.animation = "shake 0.3s linear";
+    setTimeout(() => {
+      this.#currentRowOfPlay.style.animation = "";
+    }, 400);
+  }
+
+  _buildArrayOfAllKeyboardValues() {
+    keyboardButtons.forEach((el) => {
+      this.#arrayOfAllKeyboardValues.push(el.value);
+    });
+  }
+
+  _endTheGame() {
+    this.#allTileContainersInCurrentRowOfPlay.forEach((tile, i) => {
+      setTimeout(() => {
+        tile.style.animation = `jump 0.5s ease-in-out ${i / 7}s`;
+        this._displaySuccessMessage();
+      }, 2200);
+      setTimeout(() => {
+        tile.style.animation = ``;
+      }, 4000);
+    });
+    this.#theGameIsNotActive = true;
+  }
+
+  _checkIfPlayerGuessMatchesTheAnswer() {
+    if (!this.#guessArray.every((el, i) => el === this.#answerArray[i])) {
+      this.#playerGuessMatchesTheAnswer = false;
+    }
+    if (this.#guessArray.every((el, i) => el === this.#answerArray[i])) {
+      this.#playerGuessMatchesTheAnswer = true;
+    }
+  }
+
+  _flipTiles() {
+    this.#allTileContainersInCurrentRowOfPlay.forEach((el, i) => {
+      setTimeout(() => {
+        el.classList.add("flip");
+      }, i * 300);
+    });
+  }
+
+  _updateTileColors() {
+    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+      if (tile.textContent !== this.#answerArray[i]) {
+        tile.style.backgroundColor = "grey";
+        tile.style.color = "white";
+      }
+      if (this.#answerArray.includes(tile.textContent)) {
+        tile.style.backgroundColor = "#d0b363";
+        tile.style.color = "white";
+      }
+      if (tile.textContent === this.#answerArray[i]) {
+        tile.style.backgroundColor = "#68a868";
+        tile.style.color = "white";
+      }
+      keyboardButtons.forEach((button) => {
+        if (button.value === tile.textContent) {
+          button.style.backgroundColor = tile.style.backgroundColor;
+          button.style.color = "white";
+        }
+      });
+    });
+  }
+
+  _submitPlayerGuess() {
+    this._updateTileColors();
+    this._flipTiles();
+    this._checkIfPlayerGuessMatchesTheAnswer();
+  }
+
+  _resetGuessArrayToEmpty() {
+    this.#guessArray = [];
+  }
+
+  _moveToTheNextRowOfPlay() {
+    this.#rowIndex++;
+  }
+
+  _removeLastLetterFromGuessArray() {
+    this.#guessArray.pop();
+  }
+
+  _checkifKeyPressedIsAcceptable(e) {
+    if (
+      this.#arrayOfAllKeyboardValues.includes(
+        e.key[0].toUpperCase() + e.key.slice(1)
+      )
+    ) {
+      this.#pressedKey = e.key[0].toUpperCase() + e.key.slice(1);
+      this.#keyPressedIsNotAcceptable = false;
+    }
+    if (
+      !this.#arrayOfAllKeyboardValues.includes(
+        e.key[0].toUpperCase() + e.key.slice(1)
+      )
+    ) {
+      this.#pressedKey = " ";
+      this.#keyPressedIsNotAcceptable = true;
+    }
+  }
+
+  _identifyWhichKeyWasPressed(e) {
+    e.preventDefault();
+    if (e.type === "keydown") {
+      this._checkifKeyPressedIsAcceptable(e);
+    }
+    if (e.type === "click") {
+      this.#keyPressedIsNotAcceptable = false;
+      this.#pressedKey = e.target.closest(".keyboard__button").value;
+    }
+  }
+
+  _addLetterOfPressedKeyToGuessArray() {
+    this.#guessArray.push(this.#pressedKey);
+  }
+
+  _checkIfGuessArrayIsFull() {
+    if (this.#guessArray.length < 5) this.#guessArrayIsFull = false;
+    if (this.#guessArray.length >= 5) this.#guessArrayIsFull = true;
+  }
+
+  _stopAddingLettersToGuessArray() {
+    if (this.#guessArray.length > 5) this.#guessArray.pop();
+  }
+
+  _identifyCurrentRowOfPlay() {
+    this.#currentRowOfPlay = allBoardRows[this.#rowIndex];
+  }
+
+  _selectTilesInCurrentRowOfPlay() {
+    this.#frontOfAllTilesInCurrentRowOfPlay =
+      this.#currentRowOfPlay.querySelectorAll(".front");
+    this.#backOfAllTilesInCurrentRowOfPlay =
+      this.#currentRowOfPlay.querySelectorAll(".back");
+    this.#allTileContainersInCurrentRowOfPlay =
+      this.#currentRowOfPlay.querySelectorAll(".board__tile__container");
+  }
+
+  _setTheTextContentForTilesInCurrentRowOfPlay() {
+    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+      tile.textContent = this.#guessArray[i];
+    });
+    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+      tile.textContent = this.#guessArray[i];
+    });
+  }
+}
+
 const acceptableWordList = [
   "CIGAR",
   "REBUT",
@@ -2344,323 +2681,5 @@ const acceptableWordList = [
   "RURAL",
   "SHAVE",
 ];
-
-class App {
-  #singlePlayerGame = true;
-  #theGameIsNotActive = false;
-  #guessArray = [];
-  #answerArray = [];
-  #rowIndex = 0;
-  #tiles;
-  #pressedKey;
-  #guessArrayIsFull = false;
-  #playerGuessMatchesTheAnswer = false;
-  #currentRowOfPlay;
-  #allTileContainersInCurrentRowOfPlay;
-  #frontOfAllTilesInCurrentRowOfPlay;
-  #backOfAllTilesInCurrentRowOfPlay;
-  #arrayOfAllKeyboardValues = [];
-  #keyPressedIsNotAcceptable = true;
-  #randomNumber;
-  #guessIsAnAcceptableWord = true;
-
-  constructor() {
-    this._resetGame();
-    this._buildArrayOfAllKeyboardValues();
-    keyboard.addEventListener("click", this._playTheGame.bind(this));
-    window.addEventListener("keydown", this._playTheGame.bind(this));
-    headerIconRules.addEventListener(
-      "click",
-      this._toggleRulesModal.bind(this)
-    );
-    rulesModalCloseIcon.addEventListener(
-      "click",
-      this._toggleRulesModal.bind(this)
-    );
-  }
-
-  _toggleRulesModal() {
-    rulesModalContainer.classList.toggle("hidden");
-    rulesModal.classList.toggle("translate-up");
-    exampleBack.style.border = "none";
-    setTimeout(() => {
-      exampleDivFlips.forEach((el) => {
-        el.classList.toggle("flip");
-      });
-    }, 200);
-  }
-
-  _displayErrorMessageInvalidWord() {
-    errorMessageInvalidWord.classList.remove("hidden");
-    setTimeout(() => {
-      errorMessageInvalidWord.classList.add("hidden");
-    }, 1000);
-  }
-
-  _displayErrorMessageWordTooShort() {
-    errorMessageWordTooShort.classList.remove("hidden");
-    setTimeout(() => {
-      errorMessageWordTooShort.classList.add("hidden");
-    }, 1000);
-  }
-
-  _displaySuccessMessage() {
-    successMessage.classList.remove("hidden");
-    setTimeout(() => {
-      successMessage.classList.add("hidden");
-    }, 1000);
-  }
-
-  _playTheGame(e) {
-    if (this.#theGameIsNotActive) return;
-
-    this._identifyCurrentRowOfPlay();
-    this._selectTilesInCurrentRowOfPlay();
-    this._identifyWhichKeyWasPressed(e);
-
-    if (this.#pressedKey === "Enter") {
-      this._checkIfGuessArrayIsFull();
-      if (!this.#guessArrayIsFull) {
-        this._shakeCurrentRowOfPlay();
-        this._displayErrorMessageWordTooShort();
-      }
-      if (this.#guessArrayIsFull) {
-        this._checkIfGuessIsAnAcceptableWord();
-        if (!this.#guessIsAnAcceptableWord) {
-          this._shakeCurrentRowOfPlay();
-          this._displayErrorMessageInvalidWord();
-        }
-        if (this.#guessIsAnAcceptableWord) {
-          this._submitPlayerGuess();
-          if (this.#playerGuessMatchesTheAnswer) {
-            this._endTheGame();
-          }
-          if (!this.#playerGuessMatchesTheAnswer) {
-            this._moveToTheNextRowOfPlay();
-            this._resetGuessArrayToEmpty();
-          }
-        }
-      }
-    }
-
-    if (this.#pressedKey === "Backspace") {
-      this._removeLastLetterFromGuessArray();
-      this._setTheTextContentForTilesInCurrentRowOfPlay();
-      this._checkIfGuessArrayIsFull();
-    }
-
-    if (this.#pressedKey !== "Enter" && this.#pressedKey !== "Backspace") {
-      this._addLetterOfPressedKeyToGuessArray();
-      if (this.#keyPressedIsNotAcceptable)
-        this._removeLastLetterFromGuessArray();
-      this._checkIfGuessArrayIsFull();
-      if (this.#guessArrayIsFull) this._stopAddingLettersToGuessArray();
-      this._setTheTextContentForTilesInCurrentRowOfPlay();
-    }
-  }
-
-  _setAnswerFromWordList() {
-    this.#answerArray = [];
-    this.#randomNumber = Math.floor(Math.random() * 2316) + 1;
-    const answer = acceptableWordList[this.#randomNumber];
-    [...answer].forEach((el) => this.#answerArray.push(el));
-    console.log([...answer]);
-  }
-
-  _resetBoardTiles() {
-    boardTileContainers.forEach((tile) => {
-      tile.classList.remove("flip");
-    });
-    frontOfBoardTiles.forEach((tile) => {
-      tile.textContent = "";
-    });
-    backOfBoardTiles.forEach((tile) => {
-      tile.textContent = "";
-    });
-    this.#rowIndex = 0;
-    this.#guessArray = [];
-  }
-
-  _resetKeyboard() {
-    keyboardButtons.forEach((button) => {
-      button.style.backgroundColor = "#d2d4d9";
-      button.style.color = "black";
-    });
-  }
-
-  _resetGame() {
-    this.#theGameIsNotActive = false;
-    this._setAnswerFromWordList();
-    this._resetBoardTiles();
-    this._resetKeyboard();
-    setInterval(() => {
-      this.#theGameIsNotActive = false;
-      this._setAnswerFromWordList();
-      this._resetBoardTiles();
-      this._resetKeyboard();
-    }, 20000);
-  }
-
-  _checkIfGuessIsAnAcceptableWord() {
-    if (!acceptableWordList.includes(this.#guessArray.join(""))) {
-      this.#guessIsAnAcceptableWord = false;
-    }
-    if (acceptableWordList.includes(this.#guessArray.join(""))) {
-      this.#guessIsAnAcceptableWord = true;
-    }
-  }
-
-  _shakeCurrentRowOfPlay() {
-    this.#currentRowOfPlay.style.animation = "shake 0.3s linear";
-    setTimeout(() => {
-      this.#currentRowOfPlay.style.animation = "";
-    }, 400);
-  }
-
-  _buildArrayOfAllKeyboardValues() {
-    keyboardButtons.forEach((el) => {
-      this.#arrayOfAllKeyboardValues.push(el.value);
-    });
-  }
-
-  _endTheGame() {
-    this.#allTileContainersInCurrentRowOfPlay.forEach((tile, i) => {
-      setTimeout(() => {
-        tile.style.animation = `jump 0.5s ease-in-out ${i / 7}s`;
-        this._displaySuccessMessage();
-      }, 2200);
-      setTimeout(() => {
-        tile.style.animation = ``;
-      }, 4000);
-    });
-    this.#theGameIsNotActive = true;
-  }
-
-  _checkIfPlayerGuessMatchesTheAnswer() {
-    if (!this.#guessArray.every((el, i) => el === this.#answerArray[i])) {
-      this.#playerGuessMatchesTheAnswer = false;
-    }
-    if (this.#guessArray.every((el, i) => el === this.#answerArray[i])) {
-      this.#playerGuessMatchesTheAnswer = true;
-    }
-  }
-
-  _flipTiles() {
-    this.#allTileContainersInCurrentRowOfPlay.forEach((el, i) => {
-      setTimeout(() => {
-        el.classList.add("flip");
-      }, i * 300);
-    });
-  }
-
-  _updateTileColors() {
-    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      if (tile.textContent !== this.#answerArray[i]) {
-        tile.style.backgroundColor = "grey";
-        tile.style.color = "white";
-        tile.style.border = "none";
-      }
-      if (this.#answerArray.includes(tile.textContent)) {
-        tile.style.backgroundColor = "#d0b363";
-        tile.style.color = "white";
-        tile.style.border = "none";
-      }
-      if (tile.textContent === this.#answerArray[i]) {
-        tile.style.backgroundColor = "#68a868";
-        tile.style.color = "white";
-        tile.style.border = "none";
-      }
-      keyboardButtons.forEach((button) => {
-        if (button.value === tile.textContent) {
-          button.style.backgroundColor = tile.style.backgroundColor;
-          button.style.color = "white";
-        }
-      });
-    });
-  }
-
-  _submitPlayerGuess() {
-    this._updateTileColors();
-    this._flipTiles();
-    this._checkIfPlayerGuessMatchesTheAnswer();
-  }
-
-  _resetGuessArrayToEmpty() {
-    this.#guessArray = [];
-  }
-
-  _moveToTheNextRowOfPlay() {
-    this.#rowIndex++;
-  }
-
-  _removeLastLetterFromGuessArray() {
-    this.#guessArray.pop();
-  }
-
-  _checkifKeyPressedIsAcceptable(e) {
-    if (
-      this.#arrayOfAllKeyboardValues.includes(
-        e.key[0].toUpperCase() + e.key.slice(1)
-      )
-    ) {
-      this.#pressedKey = e.key[0].toUpperCase() + e.key.slice(1);
-      this.#keyPressedIsNotAcceptable = false;
-    }
-    if (
-      !this.#arrayOfAllKeyboardValues.includes(
-        e.key[0].toUpperCase() + e.key.slice(1)
-      )
-    ) {
-      this.#pressedKey = " ";
-      this.#keyPressedIsNotAcceptable = true;
-    }
-  }
-
-  _identifyWhichKeyWasPressed(e) {
-    e.preventDefault();
-    if (e.type === "keydown") {
-      this._checkifKeyPressedIsAcceptable(e);
-    }
-    if (e.type === "click") {
-      this.#keyPressedIsNotAcceptable = false;
-      this.#pressedKey = e.target.closest(".keyboard__button").value;
-    }
-  }
-
-  _addLetterOfPressedKeyToGuessArray() {
-    this.#guessArray.push(this.#pressedKey);
-  }
-
-  _checkIfGuessArrayIsFull() {
-    if (this.#guessArray.length < 5) this.#guessArrayIsFull = false;
-    if (this.#guessArray.length >= 5) this.#guessArrayIsFull = true;
-  }
-
-  _stopAddingLettersToGuessArray() {
-    if (this.#guessArray.length > 5) this.#guessArray.pop();
-  }
-
-  _identifyCurrentRowOfPlay() {
-    this.#currentRowOfPlay = allBoardRows[this.#rowIndex];
-  }
-
-  _selectTilesInCurrentRowOfPlay() {
-    this.#frontOfAllTilesInCurrentRowOfPlay =
-      this.#currentRowOfPlay.querySelectorAll(".front");
-    this.#backOfAllTilesInCurrentRowOfPlay =
-      this.#currentRowOfPlay.querySelectorAll(".back");
-    this.#allTileContainersInCurrentRowOfPlay =
-      this.#currentRowOfPlay.querySelectorAll(".board__tile__container");
-  }
-
-  _setTheTextContentForTilesInCurrentRowOfPlay() {
-    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      tile.textContent = this.#guessArray[i];
-    });
-    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      tile.textContent = this.#guessArray[i];
-    });
-  }
-}
 
 const app = new App();

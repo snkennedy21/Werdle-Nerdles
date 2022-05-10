@@ -20,7 +20,7 @@
         <h1 class="header__title">Werdle 4 Nerdles</h1>
         <div class="header__icon-container__2">
           <ion-icon class="header__icon" name="stats-chart-outline"></ion-icon>
-          <ion-icon class="header__icon" name="settings-outline"></ion-icon>
+          <ion-icon class="header__icon header__icon__settings" name="settings-outline"></ion-icon>
         </div>
       </div>
     </header>
@@ -325,7 +325,43 @@
       </div>
     </section>
 
-    <section class="rules-modal__container hidden">
+    <section class="rules-modal__container invisible">
+      <div class="settings-modal">
+        <div class="settings-modal__header">
+          <h1 class="settings-modal__title">Settings</h1>
+          <ion-icon class="settings-modal__close-icon" class="rules-modal__close-icon" name="close-outline"></ion-icon>
+        </div>
+        <div class="settings-modal__intro"></div>
+        <div class="settings-modal__section">
+          <div>
+            <h1 class="settings-modal__section__title">Hard Mode</h1>
+            <p class="settings-modal__section__description">Any revealed hints must be used in subsequent guesses</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="settings-modal__section">
+          <div>
+            <h1 class="settings-modal__section__title">Dark Theme</h1>
+          </div>
+          <label class="switch">
+            <input type="checkbox">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="settings-modal__section">
+          <div>
+            <h1 class="settings-modal__section__title">High Contrast Mode</h1>
+            <p class="settings-modal__section__description">For improved color vision</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
       <div class="rules-modal">
         <div class="rules-modal__header">
           <h1 class="rules-modal__title">HOW TO PLAY</h1>
@@ -350,10 +386,10 @@
                   <div class="example__back example__back--green">B</div>
                 </div>
               </div>
-              <div class="example__div">E</div>
-              <div class="example__div">A</div>
-              <div class="example__div">C</div>
-              <div class="example__div">H</div>
+              <div class="example__div front-border">E</div>
+              <div class="example__div front-border">A</div>
+              <div class="example__div front-border">C</div>
+              <div class="example__div front-border">H</div>
             </div>
 
             <p class="example__text">You know what this means you <strong>NERDLE</strong></p>
@@ -361,16 +397,16 @@
 
           <div class="example">
             <div class="example__div-container">
-              <div class="example__div">O</div>
+              <div class="example__div front-border">O</div>
               <div class="example__div-flip">
                 <div class="example__div">
                   <div class="example__front"></div>
                   <div class="example__back example__back--yellow">C</div>
                 </div>
               </div>
-              <div class="example__div">E</div>
-              <div class="example__div">A</div>
-              <div class="example__div">N</div>
+              <div class="example__div front-border">E</div>
+              <div class="example__div front-border">A</div>
+              <div class="example__div front-border">N</div>
             </div>
 
             <p class="example__text">You know what this means you <strong>NERDLE</strong></p>
@@ -378,16 +414,16 @@
 
           <div class="example">
             <div class="example__div-container">
-              <div class="example__div">S</div>
-              <div class="example__div">A</div>
-              <div class="example__div">N</div>
+              <div class="example__div front-border">S</div>
+              <div class="example__div front-border">A</div>
+              <div class="example__div front-border">N</div>
               <div class="example__div-flip">
                 <div class="example__div">
                   <div class="example__front"></div>
                   <div class="example__back example__back--grey">D</div>
                 </div>
               </div>
-              <div class="example__div">Y</div>
+              <div class="example__div front-border">Y</div>
             </div>
 
             <p class="example__text">You know what this means you <strong>NERDLE</strong></p>

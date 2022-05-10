@@ -111,7 +111,6 @@ html {
   height: 100%;
   width: 100%;
   position: absolute;
-  border: 2px solid #d2d4d9;
   font-weight: 700;
 }
 
@@ -123,6 +122,7 @@ html {
   justify-content: center;
   align-items: center;
   font-size: 3rem;
+  border: 2px solid #d2d4d9;
 }
 
 .back {
@@ -133,6 +133,7 @@ html {
   justify-content: center;
   align-items: center;
   font-size: 3rem;
+  border: none;
 }
 
 .keyboard {
@@ -243,30 +244,35 @@ html {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: all 0.3s linear;
+  transition: all 0.2s linear;
 }
 
-.rules-modal {
+.rules-modal,
+.settings-modal {
   width: 48rem;
   padding: 3rem 0;
   opacity: 0;
-  transition: all 0.3s linear;
+  transition: all 0.2s linear;
 }
 
-.rules-modal.translate-up {
+.rules-modal.translate-up,
+.settings-modal.translate-up {
   transform: translateY(-2rem);
   opacity: 1;
 }
 
-.rules-modal__header {
+.rules-modal__header,
+.settings-modal__header {
   position: relative;
 }
 
-.rules-modal__title {
+.rules-modal__title,
+.settings-modal__title {
   text-align: center;
 }
 
-.rules-modal__close-icon {
+.rules-modal__close-icon,
+.settings-modal__close-icon {
   position: absolute;
   right: 0;
   top: 50%;
@@ -277,7 +283,11 @@ html {
 
 .rules-modal__intro {
   border-bottom: 0.5px solid grey;
-  padding-top: 3rem;
+  padding-top: 2rem;
+}
+
+.settings-modal__intro {
+  padding-top: 2rem;
 }
 
 .rules-modal__intro__text {
@@ -317,7 +327,10 @@ html {
   position: relative;
   transition: all 0.4s linear;
   transform-style: preserve-3d;
-  border: 2px solid grey;
+}
+
+.front-border {
+  border: 2px solid #d2d4d9;
 }
 
 .example__front,
@@ -331,6 +344,7 @@ html {
   background: white;
   z-index: 10;
   backface-visibility: hidden;
+  border: 2px solid #d2d4d9;
 }
 
 .example__back {
@@ -367,7 +381,82 @@ html {
   font-weight: 700;
 }
 
-.hidden {
+.settings-modal__section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 0.5px solid grey;
+  padding: 1.5rem 0;
+}
+
+.settings-modal__section__title {
+  font-size: 2rem;
+  font-weight: 400;
+}
+
+.settings-modal__section__description {
+  font-size: 1.2rem;
+  color: grey;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 3.5rem;
+  height: 2rem;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  border-radius: 3.4rem;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1.6rem;
+  width: 1.6rem;
+  left: 0.2rem;
+  bottom: 0.2rem;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--color-green);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 0.1rem var(--color-green);
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(1.5rem);
+  -ms-transform: translateX(1.5rem);
+  transform: translateX(1.5rem);
+}
+
+.invisible {
   opacity: 0;
   pointer-events: none;
+}
+
+.hidden {
+  display: none;
 }
