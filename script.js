@@ -45,7 +45,6 @@ class App {
   #guessArray = [];
   #answerArray = [];
   #rowIndex = 0;
-  #tiles;
   #pressedKey;
   #guessArrayIsFull = false;
   #playerGuessMatchesTheAnswer = false;
@@ -57,8 +56,18 @@ class App {
   #keyPressedIsNotAcceptable = true;
   #randomNumber;
   #guessIsAnAcceptableWord = true;
+  #playerIsOnFinalRowOfPlay = false;
+  #scoreForCurrentRound;
+  #numberOfGamesPlayed;
+  #percentageOfGamesWon;
+  #numberOfGamesWon;
+  #currentStreak;
+  #maxStreak;
+  #playerLost = false;
+  #playerDataArray;
 
   constructor() {
+    this._getLocalStorage();
     this._resetGame();
     this._buildArrayOfAllKeyboardValues();
     keyboard.addEventListener("click", this._playTheGame.bind(this));
@@ -78,6 +87,19 @@ class App {
       "click",
       this._toggleStatisticsModal.bind(this)
     );
+  }
+
+  _updateStatisticsModal() {
+    const numberOfGamesPlayed = document.querySelector(
+      ".statistics-modal__games-played"
+    );
+    const percentageOfGamesWon = document.querySelector(
+      ".statistics-modal__percent-games-won"
+    );
+    const currentStreak = document.querySelector(
+      ".statistics-modal__current-streak"
+    );
+    const maxStreak = document.querySelector(".statistics-modal__max-streak");
   }
 
   _toggleStatisticsModal() {
@@ -159,6 +181,9 @@ class App {
             this._endTheGame();
           }
           if (!this.#playerGuessMatchesTheAnswer) {
+            this._checkIfPlayerIsOnFinalRow();
+            if (this.#playerIsOnFinalRowOfPlay) this._playerLost();
+            if (this.#playerLost) this._endTheGame();
             this._moveToTheNextRowOfPlay();
             this._resetGuessArrayToEmpty();
           }
@@ -179,6 +204,17 @@ class App {
       this._checkIfGuessArrayIsFull();
       if (this.#guessArrayIsFull) this._stopAddingLettersToGuessArray();
       this._setTheTextContentForTilesInCurrentRowOfPlay();
+    }
+  }
+
+  _playerLost() {
+    this.#playerLost = true;
+  }
+
+  _checkIfPlayerIsOnFinalRow() {
+    if (this.#rowIndex >= 5) {
+      this.#rowIndex = 5;
+      this.#playerIsOnFinalRowOfPlay = true;
     }
   }
 
@@ -221,7 +257,7 @@ class App {
       this._setAnswerFromWordList();
       this._resetBoardTiles();
       this._resetKeyboard();
-    }, 20000);
+    }, 100000000);
   }
 
   _checkIfGuessIsAnAcceptableWord() {
@@ -246,17 +282,92 @@ class App {
     });
   }
 
+  _calculatePercentageOfGamesWon() {
+    this.#percentageOfGamesWon = Math.floor(
+      (this.#numberOfGamesWon / this.#numberOfGamesPlayed) * 100
+    );
+  }
+
   _endTheGame() {
-    this.#allTileContainersInCurrentRowOfPlay.forEach((tile, i) => {
-      setTimeout(() => {
-        tile.style.animation = `jump 0.5s ease-in-out ${i / 7}s`;
-        this._displaySuccessMessage();
-      }, 2200);
-      setTimeout(() => {
-        tile.style.animation = ``;
-      }, 4000);
-    });
+    [
+      this.#numberOfGamesPlayed,
+      this.#numberOfGamesWon,
+      this.#percentageOfGamesWon,
+      this.#currentStreak,
+      this.#maxStreak,
+    ] = this.#playerDataArray;
+    if (this.#numberOfGamesPlayed === undefined) this.#numberOfGamesPlayed = 0;
+    if (this.#numberOfGamesWon === undefined) this.#numberOfGamesWon = 0;
+    if (this.#percentageOfGamesWon === undefined)
+      this.#percentageOfGamesWon = 0;
+    if (this.#currentStreak === undefined) this.#currentStreak = 0;
+    if (this.#maxStreak === undefined) this.#maxStreak = 0;
+    if (this.#playerLost) {
+      this.#numberOfGamesPlayed++;
+      this._calculatePercentageOfGamesWon();
+      this.#currentStreak = 0;
+      this.#playerDataArray = [
+        this.#numberOfGamesPlayed,
+        this.#numberOfGamesWon,
+        this.#percentageOfGamesWon,
+        this.#currentStreak,
+        this.#maxStreak,
+      ];
+      console.log(this.#playerDataArray);
+      this.#scoreForCurrentRound = 6;
+      this.#numberOfGamesPlayed++;
+    }
+
+    if (!this.#playerLost) {
+      this.#allTileContainersInCurrentRowOfPlay.forEach((tile, i) => {
+        setTimeout(() => {
+          tile.style.animation = `jump 0.5s ease-in-out ${i / 7}s`;
+          this._displaySuccessMessage();
+        }, 2200);
+        setTimeout(() => {
+          tile.style.animation = ``;
+        }, 4000);
+      });
+
+      this.#numberOfGamesPlayed++;
+      this.#numberOfGamesWon++;
+      this._calculatePercentageOfGamesWon();
+      this.#currentStreak++;
+      if (this.#currentStreak > this.#maxStreak) {
+        this.#maxStreak = this.#currentStreak;
+      }
+      this.#playerDataArray = [
+        this.#numberOfGamesPlayed,
+        this.#numberOfGamesWon,
+        this.#percentageOfGamesWon,
+        this.#currentStreak,
+        this.#maxStreak,
+      ];
+      console.log(this.#playerDataArray);
+      this.#scoreForCurrentRound = this.#rowIndex + 1;
+    }
     this.#theGameIsNotActive = true;
+    this._setLocalStorage();
+  }
+
+  _setLocalStorage() {
+    localStorage.setItem(
+      "playerStatistics",
+      JSON.stringify(this.#playerDataArray)
+    );
+  }
+
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem("playerStatistics"));
+
+    if (!data) return;
+
+    this.#playerDataArray = data;
+    console.log(this.#playerDataArray);
+  }
+
+  _reset() {
+    localStorage.removeItem("playerStatistics");
   }
 
   _checkIfPlayerGuessMatchesTheAnswer() {
