@@ -7,7 +7,6 @@
 :root {
   --color-green: #68a868;
   --color-yellow: #d0b363;
-  --color-grey: #ffc425;
 }
 
 html {
@@ -60,10 +59,29 @@ html {
 }
 
 .board {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1rem;
+}
+
+.message-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.message {
+  text-align: center;
+  top: 50%;
+  left: 50%;
+  position: absolute;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  font-weight: 700;
+  width: 100%;
 }
 
 .board__row {
@@ -216,11 +234,140 @@ html {
 /* Introduction Modal */
 /* ////////////////// */
 
-.introduction-modal__container {
+.rules-modal__container {
   top: 0;
   position: absolute;
   width: 100%;
   height: 100vh;
-  background-color: rgba(255, 255, 255, 0.95);
-  display: none;
+  background-color: rgba(255, 255, 255);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s linear;
+}
+
+.rules-modal {
+  width: 48rem;
+  padding: 3rem 0;
+  opacity: 0;
+  transition: all 0.3s linear;
+}
+
+.rules-modal.translate-up {
+  transform: translateY(-2rem);
+  opacity: 1;
+}
+
+.rules-modal__header {
+  position: relative;
+}
+
+.rules-modal__title {
+  text-align: center;
+}
+
+.rules-modal__close-icon {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3rem;
+  height: 3rem;
+}
+
+.rules-modal__intro {
+  border-bottom: 0.5px solid grey;
+  padding-top: 3rem;
+}
+
+.rules-modal__intro__text {
+  padding-bottom: 1.5rem;
+  font-size: 1.4rem;
+}
+
+.rules-modal__examples {
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+  border-bottom: 0.5px solid grey;
+}
+
+.example {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 2rem;
+}
+
+.example__div-container {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.example__div-flip {
+  perspective: 100rem;
+}
+.example__div {
+  width: 4rem;
+  height: 4rem;
+  font-size: 3rem;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  transition: all 0.4s linear;
+  transform-style: preserve-3d;
+  border: 2px solid grey;
+}
+
+.example__front,
+.example__back {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+}
+
+.example__front {
+  background: white;
+  z-index: 10;
+  backface-visibility: hidden;
+}
+
+.example__back {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9;
+  color: white;
+  border: none;
+  transform: rotateX(180deg);
+}
+
+.example__back--green {
+  background: var(--color-green);
+}
+.example__back--yellow {
+  background: var(--color-yellow);
+}
+.example__back--grey {
+  background: grey;
+}
+
+.example__div-flip.flip .example__div {
+  transform: rotateX(180deg);
+}
+
+.example__text {
+  font-size: 1.4rem;
+}
+
+.rules__modal__footer {
+  padding-top: 2rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.hidden {
+  opacity: 0;
+  pointer-events: none;
 }

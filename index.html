@@ -6,6 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="querries.css">
   <title>Document</title>
 </head>
 
@@ -14,9 +15,9 @@
     <header>
       <div class="header">
         <div class="header__icon-container__1">
-          <ion-icon class="header__icon" name="help-circle-outline"></ion-icon>
+          <ion-icon class="header__icon header__icon__rules" name="help-circle-outline"></ion-icon>
         </div>
-        <h1 class="header__title">Wordle</h1>
+        <h1 class="header__title">Werdle 4 Nerdles</h1>
         <div class="header__icon-container__2">
           <ion-icon class="header__icon" name="stats-chart-outline"></ion-icon>
           <ion-icon class="header__icon" name="settings-outline"></ion-icon>
@@ -26,6 +27,11 @@
 
     <section class="section">
       <div class="board">
+        <div class="message-container">
+          <p class="message success__message hidden">BINGO!</p>
+          <p class="message error__message--short hidden">Too Short</p>
+          <p class="message error__message--invalid hidden">Not A Valid Word</p>
+        </div>
         <div class="board__row board__row__1">
           <div class="board__tile__container">
             <div class="board__tile">
@@ -319,8 +325,75 @@
       </div>
     </section>
 
-    <section class="introduction-modal__container">
-      <div class="introduction-modal">
+    <section class="rules-modal__container hidden">
+      <div class="rules-modal">
+        <div class="rules-modal__header">
+          <h1 class="rules-modal__title">HOW TO PLAY</h1>
+          <ion-icon class="rules-modal__close-icon" name="close-outline"></ion-icon>
+        </div>
+        <div class="rules-modal__intro">
+          <p class="rules-modal__intro__text">Guess the <strong>WERDLE</strong> in six tries you
+            <strong>NERDLE</strong>.
+          </p>
+          <p class="rules-modal__intro__text">Each guess must be a valid five-letter word. Hit the enter button to
+            submit.</p>
+          <p class="rules-modal__intro__text">After each guess, the color of the tiles will change to show how close
+            your guess was to the word.</p>
+        </div>
+        <div class="rules-modal__examples">
+          <h2>Examples</h2>
+          <div class="example">
+            <div class="example__div-container">
+              <div class="example__div-flip">
+                <div class="example__div">
+                  <div class="example__front"></div>
+                  <div class="example__back example__back--green">B</div>
+                </div>
+              </div>
+              <div class="example__div">E</div>
+              <div class="example__div">A</div>
+              <div class="example__div">C</div>
+              <div class="example__div">H</div>
+            </div>
+
+            <p class="example__text">You know what this means you <strong>NERDLE</strong></p>
+          </div>
+
+          <div class="example">
+            <div class="example__div-container">
+              <div class="example__div">O</div>
+              <div class="example__div-flip">
+                <div class="example__div">
+                  <div class="example__front"></div>
+                  <div class="example__back example__back--yellow">C</div>
+                </div>
+              </div>
+              <div class="example__div">E</div>
+              <div class="example__div">A</div>
+              <div class="example__div">N</div>
+            </div>
+
+            <p class="example__text">You know what this means you <strong>NERDLE</strong></p>
+          </div>
+
+          <div class="example">
+            <div class="example__div-container">
+              <div class="example__div">S</div>
+              <div class="example__div">A</div>
+              <div class="example__div">N</div>
+              <div class="example__div-flip">
+                <div class="example__div">
+                  <div class="example__front"></div>
+                  <div class="example__back example__back--grey">D</div>
+                </div>
+              </div>
+              <div class="example__div">Y</div>
+            </div>
+
+            <p class="example__text">You know what this means you <strong>NERDLE</strong></p>
+          </div>
+        </div>
+        <p class="rules__modal__footer">New WERLDE every hour for NERDLES</p>
       </div>
     </section>
   </div>

@@ -12,6 +12,19 @@ const backOfBoardTiles = document.querySelectorAll(".back");
 const boardTileContainers = document.querySelectorAll(
   ".board__tile__container"
 );
+const successMessage = document.querySelector(".success__message");
+const errorMessageWordTooShort = document.querySelector(
+  ".error__message--short"
+);
+const errorMessageInvalidWord = document.querySelector(
+  ".error__message--invalid"
+);
+const rulesModalCloseIcon = document.querySelector(".rules-modal__close-icon");
+const headerIconRules = document.querySelector(".header__icon__rules");
+const rulesModalContainer = document.querySelector(".rules-modal__container");
+const rulesModal = document.querySelector(".rules-modal");
+const exampleDivFlips = document.querySelectorAll(".example__div-flip");
+const exampleBack = document.querySelector(".example__back");
 const acceptableWordList = [
   "CIGAR",
   "REBUT",
@@ -2356,6 +2369,46 @@ class App {
     this._buildArrayOfAllKeyboardValues();
     keyboard.addEventListener("click", this._playTheGame.bind(this));
     window.addEventListener("keydown", this._playTheGame.bind(this));
+    headerIconRules.addEventListener(
+      "click",
+      this._toggleRulesModal.bind(this)
+    );
+    rulesModalCloseIcon.addEventListener(
+      "click",
+      this._toggleRulesModal.bind(this)
+    );
+  }
+
+  _toggleRulesModal() {
+    rulesModalContainer.classList.toggle("hidden");
+    rulesModal.classList.toggle("translate-up");
+    exampleBack.style.border = "none";
+    setTimeout(() => {
+      exampleDivFlips.forEach((el) => {
+        el.classList.toggle("flip");
+      });
+    }, 200);
+  }
+
+  _displayErrorMessageInvalidWord() {
+    errorMessageInvalidWord.classList.remove("hidden");
+    setTimeout(() => {
+      errorMessageInvalidWord.classList.add("hidden");
+    }, 1000);
+  }
+
+  _displayErrorMessageWordTooShort() {
+    errorMessageWordTooShort.classList.remove("hidden");
+    setTimeout(() => {
+      errorMessageWordTooShort.classList.add("hidden");
+    }, 1000);
+  }
+
+  _displaySuccessMessage() {
+    successMessage.classList.remove("hidden");
+    setTimeout(() => {
+      successMessage.classList.add("hidden");
+    }, 1000);
   }
 
   _playTheGame(e) {
@@ -2367,10 +2420,16 @@ class App {
 
     if (this.#pressedKey === "Enter") {
       this._checkIfGuessArrayIsFull();
-      if (!this.#guessArrayIsFull) this._shakeCurrentRowOfPlay();
+      if (!this.#guessArrayIsFull) {
+        this._shakeCurrentRowOfPlay();
+        this._displayErrorMessageWordTooShort();
+      }
       if (this.#guessArrayIsFull) {
         this._checkIfGuessIsAnAcceptableWord();
-        if (!this.#guessIsAnAcceptableWord) this._shakeCurrentRowOfPlay();
+        if (!this.#guessIsAnAcceptableWord) {
+          this._shakeCurrentRowOfPlay();
+          this._displayErrorMessageInvalidWord();
+        }
         if (this.#guessIsAnAcceptableWord) {
           this._submitPlayerGuess();
           if (this.#playerGuessMatchesTheAnswer) {
@@ -2468,6 +2527,7 @@ class App {
     this.#allTileContainersInCurrentRowOfPlay.forEach((tile, i) => {
       setTimeout(() => {
         tile.style.animation = `jump 0.5s ease-in-out ${i / 7}s`;
+        this._displaySuccessMessage();
       }, 2200);
       setTimeout(() => {
         tile.style.animation = ``;
