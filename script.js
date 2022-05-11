@@ -39,6 +39,15 @@ const statisticsModalCloseIcon = document.querySelector(
   ".statistics-modal__close-icon"
 );
 
+class BoardTile {
+  constructor(flipStatus, backgroundColor, color, text) {
+    this.flipStatus = flipStatus;
+    this.backgroundColor = backgroundColor;
+    this.color = color;
+    this.text = text;
+  }
+}
+
 class App {
   #singlePlayerGame = true;
   #theGameIsNotActive = false;
@@ -65,10 +74,19 @@ class App {
   #maxStreak;
   #playerLost = false;
   #playerDataArray;
+  #playerBoardDataArray = [];
+  #flipStatus = false;
+  #backgroundColor;
+  #color;
+  #text;
 
   constructor() {
-    this._getLocalStorage();
+    this._getLocalStorageForBoardData();
+    this._getLocalStorageForPlayerStatistics();
     this._resetGame();
+    this._restoreBoardDataInPlayerBoardDataArray();
+    this._constructPlayerBoard();
+    this._displayPlayerStats();
     this._buildArrayOfAllKeyboardValues();
     keyboard.addEventListener("click", this._playTheGame.bind(this));
     window.addEventListener("keydown", this._playTheGame.bind(this));
@@ -89,17 +107,117 @@ class App {
     );
   }
 
-  _updateStatisticsModal() {
-    const numberOfGamesPlayed = document.querySelector(
-      ".statistics-modal__games-played"
-    );
-    const percentageOfGamesWon = document.querySelector(
-      ".statistics-modal__percent-games-won"
-    );
-    const currentStreak = document.querySelector(
-      ".statistics-modal__current-streak"
-    );
-    const maxStreak = document.querySelector(".statistics-modal__max-streak");
+  _getLocalStorageForPlayerStatistics() {
+    const playerData = JSON.parse(localStorage.getItem("playerStatistics"));
+    if (!playerData) {
+      this.#playerDataArray = [0, 0, 0, 0, 0];
+      this.#numberOfGamesPlayed = 0;
+      this.#numberOfGamesWon = 0;
+      this.#percentageOfGamesWon = 0;
+      this.#currentStreak = 0;
+      this.#maxStreak = 0;
+      console.log(this.#playerDataArray);
+    }
+    if (playerData) {
+      this.#playerDataArray = playerData;
+      [
+        this.#numberOfGamesPlayed,
+        this.#numberOfGamesWon,
+        this.#percentageOfGamesWon,
+        this.#currentStreak,
+        this.#maxStreak,
+      ] = this.#playerDataArray;
+    }
+  }
+
+  _getLocalStorageForBoardData() {
+    const boardData = JSON.parse(localStorage.getItem("playerBoard"));
+    const rowData = JSON.parse(localStorage.getItem("rowIndex"));
+
+    if (!boardData) return;
+
+    this.#rowIndex = rowData;
+    this.#playerBoardDataArray = boardData;
+
+    console.log("yes");
+  }
+
+  _resetGame() {
+    this.#theGameIsNotActive = false;
+    this._setAnswerFromWordList();
+    // this._resetBoardTiles();
+    this._resetKeyboard();
+  }
+
+  _constructPlayerBoard() {
+    setTimeout(() => {
+      console.log(this.#playerBoardDataArray);
+      boardTileContainers.forEach((tile, i) => {
+        backOfBoardTiles[i].style.backgroundColor =
+          this.#playerBoardDataArray[i].backgroundColor;
+        backOfBoardTiles[i].textContent = this.#playerBoardDataArray[i].text;
+        backOfBoardTiles[i].style.color = this.#playerBoardDataArray[i].color;
+        if (this.#playerBoardDataArray[i].flipStatus === true) {
+          tile.classList.add("flip");
+          tile.classList.add("flipped");
+        }
+      });
+    }, 1500);
+  }
+
+  _resetBoardTiles() {
+    frontOfBoardTiles.forEach((tile) => {
+      tile.backgroundColor = "white";
+    });
+    backOfBoardTiles.forEach((tile) => {
+      tile.backgroundColor = "white";
+      tile.color = "white";
+    });
+  }
+
+  _restoreBoardDataInPlayerBoardDataArray() {
+    boardTileContainers.forEach((el, i) => {
+      setTimeout(() => {
+        this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
+        this.#color = backOfBoardTiles[i].style.color;
+        this.#text = backOfBoardTiles[i].textContent;
+        if (el.classList.contains("flip")) this.#flipStatus = true;
+        if (!el.classList.contains("flip")) this.#flipStatus = false;
+        let boardTile = new BoardTile(
+          this.#flipStatus,
+          this.#backgroundColor,
+          this.#color,
+          this.#text
+        );
+        this.#playerBoardDataArray.push(boardTile);
+      }, 1500);
+    });
+    setTimeout(() => {
+      this.#playerBoardDataArray.splice(30);
+    }, 1500);
+  }
+
+  _storeBoardDataInPlayerBoardDataArray() {
+    this.#playerBoardDataArray = [];
+    boardTileContainers.forEach((el, i) => {
+      setTimeout(() => {
+        this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
+        this.#color = backOfBoardTiles[i].style.color;
+        this.#text = backOfBoardTiles[i].textContent;
+        if (el.classList.contains("flipped")) this.#flipStatus = true;
+        if (!el.classList.contains("flipped")) this.#flipStatus = false;
+        let boardTile = new BoardTile(
+          this.#flipStatus,
+          this.#backgroundColor,
+          this.#color,
+          this.#text
+        );
+        this.#playerBoardDataArray.push(boardTile);
+      }, 1500);
+    });
+    setTimeout(() => {
+      console.log(this.#playerBoardDataArray);
+    }, 1500);
   }
 
   _toggleStatisticsModal() {
@@ -177,6 +295,11 @@ class App {
         }
         if (this.#guessIsAnAcceptableWord) {
           this._submitPlayerGuess();
+          this._resetBoardTiles();
+          this._storeBoardDataInPlayerBoardDataArray();
+          setTimeout(() => {
+            this._setLocalStorageForBoardData();
+          }, 1500);
           if (this.#playerGuessMatchesTheAnswer) {
             this._endTheGame();
           }
@@ -226,38 +349,11 @@ class App {
     console.log([...answer]);
   }
 
-  _resetBoardTiles() {
-    boardTileContainers.forEach((tile) => {
-      tile.classList.remove("flip");
-    });
-    frontOfBoardTiles.forEach((tile) => {
-      tile.textContent = "";
-    });
-    backOfBoardTiles.forEach((tile) => {
-      tile.textContent = "";
-    });
-    this.#rowIndex = 0;
-    this.#guessArray = [];
-  }
-
   _resetKeyboard() {
     keyboardButtons.forEach((button) => {
       button.style.backgroundColor = "#d2d4d9";
       button.style.color = "black";
     });
-  }
-
-  _resetGame() {
-    this.#theGameIsNotActive = false;
-    this._setAnswerFromWordList();
-    this._resetBoardTiles();
-    this._resetKeyboard();
-    setInterval(() => {
-      this.#theGameIsNotActive = false;
-      this._setAnswerFromWordList();
-      this._resetBoardTiles();
-      this._resetKeyboard();
-    }, 100000000);
   }
 
   _checkIfGuessIsAnAcceptableWord() {
@@ -289,13 +385,6 @@ class App {
   }
 
   _endTheGame() {
-    [
-      this.#numberOfGamesPlayed,
-      this.#numberOfGamesWon,
-      this.#percentageOfGamesWon,
-      this.#currentStreak,
-      this.#maxStreak,
-    ] = this.#playerDataArray;
     if (this.#numberOfGamesPlayed === undefined) this.#numberOfGamesPlayed = 0;
     if (this.#numberOfGamesWon === undefined) this.#numberOfGamesWon = 0;
     if (this.#percentageOfGamesWon === undefined)
@@ -346,28 +435,47 @@ class App {
       console.log(this.#playerDataArray);
       this.#scoreForCurrentRound = this.#rowIndex + 1;
     }
+    this._displayPlayerStats();
     this.#theGameIsNotActive = true;
-    this._setLocalStorage();
+    this._setLocalStorageForPlayerData();
   }
 
-  _setLocalStorage() {
+  _displayPlayerStats() {
+    const numberOfGamesPlayed = document.querySelector(
+      ".statistics-modal__games-played"
+    );
+    const percentageOfGamesWon = document.querySelector(
+      ".statistics-modal__percent-games-won"
+    );
+    const currentStreak = document.querySelector(
+      ".statistics-modal__current-streak"
+    );
+    const maxStreak = document.querySelector(".statistics-modal__max-streak");
+    numberOfGamesPlayed.textContent = this.#numberOfGamesPlayed;
+    percentageOfGamesWon.textContent = this.#percentageOfGamesWon;
+    currentStreak.textContent = this.#currentStreak;
+    maxStreak.textContent = this.#maxStreak;
+  }
+
+  _setLocalStorageForPlayerData() {
     localStorage.setItem(
       "playerStatistics",
       JSON.stringify(this.#playerDataArray)
     );
   }
 
-  _getLocalStorage() {
-    const data = JSON.parse(localStorage.getItem("playerStatistics"));
-
-    if (!data) return;
-
-    this.#playerDataArray = data;
-    console.log(this.#playerDataArray);
+  _setLocalStorageForBoardData() {
+    console.log(this.#playerBoardDataArray);
+    localStorage.setItem(
+      "playerBoard",
+      JSON.stringify(this.#playerBoardDataArray)
+    );
+    localStorage.setItem("rowIndex", JSON.stringify(this.#rowIndex));
   }
 
   _reset() {
     localStorage.removeItem("playerStatistics");
+    localStorage.removeItem("playerBoard");
   }
 
   _checkIfPlayerGuessMatchesTheAnswer() {
@@ -381,6 +489,7 @@ class App {
 
   _flipTiles() {
     this.#allTileContainersInCurrentRowOfPlay.forEach((el, i) => {
+      el.classList.add("flipped");
       setTimeout(() => {
         el.classList.add("flip");
       }, i * 300);
