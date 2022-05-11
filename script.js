@@ -81,9 +81,12 @@ class App {
   #text;
 
   constructor() {
+    this._getLocalStorageForAnswer();
+    console.log(this.#answerArray);
+    this._setAnswerFromWordList();
+    this._setLocalStorageForAnswer();
     this._getLocalStorageForBoardData();
     this._getLocalStorageForPlayerStatistics();
-    this._resetGame();
     this._restoreBoardDataInPlayerBoardDataArray();
     this._constructPlayerBoard();
     this._displayPlayerStats();
@@ -116,7 +119,6 @@ class App {
       this.#percentageOfGamesWon = 0;
       this.#currentStreak = 0;
       this.#maxStreak = 0;
-      console.log(this.#playerDataArray);
     }
     if (playerData) {
       this.#playerDataArray = playerData;
@@ -136,33 +138,31 @@ class App {
 
     if (!boardData) return;
 
-    this.#rowIndex = rowData;
+    this.#rowIndex = rowData + 1;
     this.#playerBoardDataArray = boardData;
+  }
 
-    console.log("yes");
+  _getLocalStorageForAnswer() {
+    const answer = JSON.parse(localStorage.getItem("answer"));
+    this.#answerArray = answer;
   }
 
   _resetGame() {
     this.#theGameIsNotActive = false;
-    this._setAnswerFromWordList();
-    // this._resetBoardTiles();
     this._resetKeyboard();
   }
 
   _constructPlayerBoard() {
-    setTimeout(() => {
-      console.log(this.#playerBoardDataArray);
-      boardTileContainers.forEach((tile, i) => {
-        backOfBoardTiles[i].style.backgroundColor =
-          this.#playerBoardDataArray[i].backgroundColor;
-        backOfBoardTiles[i].textContent = this.#playerBoardDataArray[i].text;
-        backOfBoardTiles[i].style.color = this.#playerBoardDataArray[i].color;
-        if (this.#playerBoardDataArray[i].flipStatus === true) {
-          tile.classList.add("flip");
-          tile.classList.add("flipped");
-        }
-      });
-    }, 1500);
+    boardTileContainers.forEach((tile, i) => {
+      backOfBoardTiles[i].style.backgroundColor =
+        this.#playerBoardDataArray[i].backgroundColor;
+      backOfBoardTiles[i].textContent = this.#playerBoardDataArray[i].text;
+      backOfBoardTiles[i].style.color = this.#playerBoardDataArray[i].color;
+      if (this.#playerBoardDataArray[i].flipStatus === true) {
+        tile.classList.add("flip");
+        tile.classList.add("flipped");
+      }
+    });
   }
 
   _resetBoardTiles() {
@@ -177,47 +177,39 @@ class App {
 
   _restoreBoardDataInPlayerBoardDataArray() {
     boardTileContainers.forEach((el, i) => {
-      setTimeout(() => {
-        this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
-        this.#color = backOfBoardTiles[i].style.color;
-        this.#text = backOfBoardTiles[i].textContent;
-        if (el.classList.contains("flip")) this.#flipStatus = true;
-        if (!el.classList.contains("flip")) this.#flipStatus = false;
-        let boardTile = new BoardTile(
-          this.#flipStatus,
-          this.#backgroundColor,
-          this.#color,
-          this.#text
-        );
-        this.#playerBoardDataArray.push(boardTile);
-      }, 1500);
+      this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
+      this.#color = backOfBoardTiles[i].style.color;
+      this.#text = backOfBoardTiles[i].textContent;
+      if (el.classList.contains("flip")) this.#flipStatus = true;
+      if (!el.classList.contains("flip")) this.#flipStatus = false;
+      let boardTile = new BoardTile(
+        this.#flipStatus,
+        this.#backgroundColor,
+        this.#color,
+        this.#text
+      );
+      this.#playerBoardDataArray.push(boardTile);
     });
-    setTimeout(() => {
-      this.#playerBoardDataArray.splice(30);
-    }, 1500);
+    this.#playerBoardDataArray.splice(30);
   }
 
   _storeBoardDataInPlayerBoardDataArray() {
     this.#playerBoardDataArray = [];
     boardTileContainers.forEach((el, i) => {
-      setTimeout(() => {
-        this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
-        this.#color = backOfBoardTiles[i].style.color;
-        this.#text = backOfBoardTiles[i].textContent;
-        if (el.classList.contains("flipped")) this.#flipStatus = true;
-        if (!el.classList.contains("flipped")) this.#flipStatus = false;
-        let boardTile = new BoardTile(
-          this.#flipStatus,
-          this.#backgroundColor,
-          this.#color,
-          this.#text
-        );
-        this.#playerBoardDataArray.push(boardTile);
-      }, 1500);
+      this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
+      this.#color = backOfBoardTiles[i].style.color;
+      this.#text = backOfBoardTiles[i].textContent;
+      if (el.classList.contains("flipped")) this.#flipStatus = true;
+      if (!el.classList.contains("flipped")) this.#flipStatus = false;
+      let boardTile = new BoardTile(
+        this.#flipStatus,
+        this.#backgroundColor,
+        this.#color,
+        this.#text
+      );
+      this.#playerBoardDataArray.push(boardTile);
     });
-    setTimeout(() => {
-      console.log(this.#playerBoardDataArray);
-    }, 1500);
+    console.log(this.#playerBoardDataArray);
   }
 
   _toggleStatisticsModal() {
@@ -297,9 +289,7 @@ class App {
           this._submitPlayerGuess();
           this._resetBoardTiles();
           this._storeBoardDataInPlayerBoardDataArray();
-          setTimeout(() => {
-            this._setLocalStorageForBoardData();
-          }, 1500);
+          this._setLocalStorageForBoardData();
           if (this.#playerGuessMatchesTheAnswer) {
             this._endTheGame();
           }
@@ -342,11 +332,13 @@ class App {
   }
 
   _setAnswerFromWordList() {
-    this.#answerArray = [];
-    this.#randomNumber = Math.floor(Math.random() * 2316) + 1;
-    const answer = acceptableWordList[this.#randomNumber];
-    [...answer].forEach((el) => this.#answerArray.push(el));
-    console.log([...answer]);
+    if (this.#answerArray.length !== 0) return;
+    if (this.#answerArray.length === 0) {
+      this.#randomNumber = Math.floor(Math.random() * 2316) + 1;
+      const answer = acceptableWordList[this.#randomNumber];
+      [...answer].forEach((el) => this.#answerArray.push(el));
+      console.log(this.#answerArray);
+    }
   }
 
   _resetKeyboard() {
@@ -455,6 +447,10 @@ class App {
     percentageOfGamesWon.textContent = this.#percentageOfGamesWon;
     currentStreak.textContent = this.#currentStreak;
     maxStreak.textContent = this.#maxStreak;
+  }
+
+  _setLocalStorageForAnswer() {
+    localStorage.setItem("answer", JSON.stringify(this.#answerArray));
   }
 
   _setLocalStorageForPlayerData() {
