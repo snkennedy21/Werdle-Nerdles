@@ -39,6 +39,13 @@ const statisticsModalCloseIcon = document.querySelector(
   ".statistics-modal__close-icon"
 );
 
+class KeyboardButtonObject {
+  constructor(backgroundColor, color) {
+    this.backgroundColor = backgroundColor;
+    this.color = color;
+  }
+}
+
 class BoardTile {
   constructor(flipStatus, backgroundColor, color, text) {
     this.flipStatus = flipStatus;
@@ -49,8 +56,8 @@ class BoardTile {
 }
 
 class App {
-  #singlePlayerGame = true;
   #theGameIsNotActive = false;
+  #scoreForCurrentRound;
   #guessArray = [];
   #answerArray = [];
   #rowIndex = 0;
@@ -66,7 +73,6 @@ class App {
   #randomNumber;
   #guessIsAnAcceptableWord = true;
   #playerIsOnFinalRowOfPlay = false;
-  #scoreForCurrentRound;
   #numberOfGamesPlayed;
   #percentageOfGamesWon;
   #numberOfGamesWon;
@@ -79,6 +85,9 @@ class App {
   #backgroundColor;
   #color;
   #text;
+  #keyboardButtonDataArray = [];
+  #keyboardButtonBackgroundColor;
+  #keyboardButtonColor;
 
   constructor() {
     this._getLocalStorageForAnswer();
@@ -86,8 +95,11 @@ class App {
     this._setAnswerFromWordList();
     this._setLocalStorageForAnswer();
     this._getLocalStorageForBoardData();
+    this._getLocalStorageForKeyboardData();
     this._getLocalStorageForPlayerStatistics();
     this._restoreBoardDataInPlayerBoardDataArray();
+    this._restoreDataToTheKeyboardButtonDataArray();
+    this._constructKeyboard();
     this._constructPlayerBoard();
     this._displayPlayerStats();
     this._buildArrayOfAllKeyboardValues();
@@ -109,6 +121,229 @@ class App {
       this._toggleStatisticsModal.bind(this)
     );
   }
+
+  _playTheGame(e) {
+    if (this.#theGameIsNotActive) return;
+
+    this._identifyCurrentRowOfPlay();
+    this._selectTilesInCurrentRowOfPlay();
+    this._identifyWhichKeyWasPressed(e);
+
+    if (this.#pressedKey === "Enter") {
+      this._checkIfGuessArrayIsFull();
+      if (!this.#guessArrayIsFull) {
+        this._shakeCurrentRowOfPlay();
+        this._displayErrorMessageWordTooShort();
+      }
+      if (this.#guessArrayIsFull) {
+        this._checkIfGuessIsAnAcceptableWord();
+        if (!this.#guessIsAnAcceptableWord) {
+          this._shakeCurrentRowOfPlay();
+          this._displayErrorMessageInvalidWord();
+        }
+        if (this.#guessIsAnAcceptableWord) {
+          this._submitPlayerGuess();
+          this._resetBoardTiles();
+          this._storeBoardDataInPlayerBoardDataArray();
+          setTimeout(() => {
+            this._storeDataInTheKeyboardButtonDataArray();
+            this._setLocalStorageForKeyboardData();
+          }, 2200);
+          this._setLocalStorageForBoardData();
+          if (this.#playerGuessMatchesTheAnswer) {
+            this._endTheGame();
+          }
+          if (!this.#playerGuessMatchesTheAnswer) {
+            this._checkIfPlayerIsOnFinalRow();
+            if (this.#playerIsOnFinalRowOfPlay) this._playerLost();
+            if (this.#playerLost) this._endTheGame();
+            this._moveToTheNextRowOfPlay();
+            this._resetGuessArrayToEmpty();
+          }
+        }
+      }
+    }
+
+    if (this.#pressedKey === "Backspace") {
+      this._removeLastLetterFromGuessArray();
+      this._setTheTextContentForTilesInCurrentRowOfPlay();
+      this._checkIfGuessArrayIsFull();
+    }
+
+    if (this.#pressedKey !== "Enter" && this.#pressedKey !== "Backspace") {
+      this._addLetterOfPressedKeyToGuessArray();
+      if (this.#keyPressedIsNotAcceptable)
+        this._removeLastLetterFromGuessArray();
+      this._checkIfGuessArrayIsFull();
+      if (this.#guessArrayIsFull) this._stopAddingLettersToGuessArray();
+      this._setTheTextContentForTilesInCurrentRowOfPlay();
+    }
+  }
+
+  _constructPlayerBoard() {
+    boardTileContainers.forEach((tile, i) => {
+      backOfBoardTiles[i].style.backgroundColor =
+        this.#playerBoardDataArray[i].backgroundColor;
+      backOfBoardTiles[i].textContent = this.#playerBoardDataArray[i].text;
+      backOfBoardTiles[i].style.color = this.#playerBoardDataArray[i].color;
+      if (this.#playerBoardDataArray[i].flipStatus === true) {
+        tile.classList.add("flip");
+        tile.classList.add("flipped");
+      }
+    });
+  }
+
+  _constructKeyboard() {
+    keyboardButtons.forEach((button, i) => {
+      if ((button.style.backgroundColor = "#68a868"))
+        button.style.backgroundColor = "#68a868";
+      button.style.backgroundColor =
+        this.#keyboardButtonDataArray[i].backgroundColor;
+      button.style.color = this.#keyboardButtonDataArray[i].color;
+    });
+  }
+
+  _resetBoardTiles() {
+    frontOfBoardTiles.forEach((tile) => {
+      tile.backgroundColor = "white";
+    });
+    backOfBoardTiles.forEach((tile) => {
+      tile.backgroundColor = "white";
+      tile.color = "white";
+    });
+  }
+
+  _restoreDataToTheKeyboardButtonDataArray() {
+    keyboardButtons.forEach((button, i) => {
+      this.#keyboardButtonBackgroundColor = button.style.backgroundColor;
+      this.#keyboardButtonColor = button.style.color;
+      let keyboardButtonObject = new KeyboardButtonObject(
+        this.#keyboardButtonBackgroundColor,
+        this.#keyboardButtonColor
+      );
+      this.#keyboardButtonDataArray.push(keyboardButtonObject);
+    });
+    this.#keyboardButtonDataArray.splice(28);
+    console.log(this.#keyboardButtonDataArray);
+  }
+
+  _restoreBoardDataInPlayerBoardDataArray() {
+    boardTileContainers.forEach((el, i) => {
+      this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
+      this.#color = backOfBoardTiles[i].style.color;
+      this.#text = backOfBoardTiles[i].textContent;
+      if (el.classList.contains("flip")) this.#flipStatus = true;
+      if (!el.classList.contains("flip")) this.#flipStatus = false;
+      let boardTile = new BoardTile(
+        this.#flipStatus,
+        this.#backgroundColor,
+        this.#color,
+        this.#text
+      );
+      this.#playerBoardDataArray.push(boardTile);
+    });
+    this.#playerBoardDataArray.splice(30);
+  }
+
+  _storeDataInTheKeyboardButtonDataArray() {
+    keyboardButtons.forEach((button, i) => {
+      this.#keyboardButtonBackgroundColor = button.style.backgroundColor;
+      this.#keyboardButtonColor = button.style.color;
+      let keyboardButtonObject = new KeyboardButtonObject(
+        this.#keyboardButtonBackgroundColor,
+        this.#keyboardButtonColor
+      );
+      this.#keyboardButtonDataArray.push(keyboardButtonObject);
+    });
+    this.#keyboardButtonDataArray.splice(0, 28);
+  }
+
+  _storeBoardDataInPlayerBoardDataArray() {
+    this.#playerBoardDataArray = [];
+    boardTileContainers.forEach((el, i) => {
+      this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
+      this.#color = backOfBoardTiles[i].style.color;
+      this.#text = backOfBoardTiles[i].textContent;
+      if (el.classList.contains("flipped")) this.#flipStatus = true;
+      if (!el.classList.contains("flipped")) this.#flipStatus = false;
+      let boardTile = new BoardTile(
+        this.#flipStatus,
+        this.#backgroundColor,
+        this.#color,
+        this.#text
+      );
+      this.#playerBoardDataArray.push(boardTile);
+    });
+  }
+
+  _setLocalStorageForKeyboardData() {
+    console.log(this.#keyboardButtonDataArray);
+    localStorage.setItem(
+      "keyboard",
+      JSON.stringify(this.#keyboardButtonDataArray)
+    );
+  }
+
+  _getLocalStorageForKeyboardData() {
+    const keyboardData = JSON.parse(localStorage.getItem("keyboard"));
+
+    if (!keyboardData) return;
+
+    this.#keyboardButtonDataArray = keyboardData;
+  }
+
+  _getLocalStorageForBoardData() {
+    const boardData = JSON.parse(localStorage.getItem("playerBoard"));
+    const rowData = JSON.parse(localStorage.getItem("rowIndex"));
+
+    if (!boardData) return;
+
+    this.#rowIndex = rowData + 1;
+    this.#playerBoardDataArray = boardData;
+  }
+
+  _setLocalStorageForBoardData() {
+    localStorage.setItem(
+      "playerBoard",
+      JSON.stringify(this.#playerBoardDataArray)
+    );
+    localStorage.setItem("rowIndex", JSON.stringify(this.#rowIndex));
+  }
+
+  _updateTileColors() {
+    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+      if (tile.textContent !== this.#answerArray[i]) {
+        tile.style.backgroundColor = "grey";
+        tile.style.color = "white";
+      }
+      if (this.#answerArray.includes(tile.textContent)) {
+        tile.style.backgroundColor = "#d0b363";
+        tile.style.color = "white";
+      }
+      if (tile.textContent === this.#answerArray[i]) {
+        tile.style.backgroundColor = "#68a868";
+        tile.style.color = "white";
+      }
+      keyboardButtons.forEach((button) => {
+        if (button.value === tile.textContent) {
+          setTimeout(() => {
+            button.style.color = "white";
+            console.log(button.style.backgroundColor);
+            if (button.style.backgroundColor === "rgb(104, 168, 104)") {
+              console.log("green");
+              button.style.backgroundColor = "rgb(104, 168, 104)";
+            }
+            if (button.style.backgroundColor !== "rgb(104, 168, 104)") {
+              console.log("not");
+              button.style.backgroundColor = tile.style.backgroundColor;
+            }
+          }, 2200);
+        }
+      });
+    });
+  }
+
+  // BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||BREAK||
 
   _getLocalStorageForPlayerStatistics() {
     const playerData = JSON.parse(localStorage.getItem("playerStatistics"));
@@ -132,16 +367,6 @@ class App {
     }
   }
 
-  _getLocalStorageForBoardData() {
-    const boardData = JSON.parse(localStorage.getItem("playerBoard"));
-    const rowData = JSON.parse(localStorage.getItem("rowIndex"));
-
-    if (!boardData) return;
-
-    this.#rowIndex = rowData + 1;
-    this.#playerBoardDataArray = boardData;
-  }
-
   _getLocalStorageForAnswer() {
     const answer = JSON.parse(localStorage.getItem("answer"));
     this.#answerArray = answer;
@@ -150,66 +375,6 @@ class App {
   _resetGame() {
     this.#theGameIsNotActive = false;
     this._resetKeyboard();
-  }
-
-  _constructPlayerBoard() {
-    boardTileContainers.forEach((tile, i) => {
-      backOfBoardTiles[i].style.backgroundColor =
-        this.#playerBoardDataArray[i].backgroundColor;
-      backOfBoardTiles[i].textContent = this.#playerBoardDataArray[i].text;
-      backOfBoardTiles[i].style.color = this.#playerBoardDataArray[i].color;
-      if (this.#playerBoardDataArray[i].flipStatus === true) {
-        tile.classList.add("flip");
-        tile.classList.add("flipped");
-      }
-    });
-  }
-
-  _resetBoardTiles() {
-    frontOfBoardTiles.forEach((tile) => {
-      tile.backgroundColor = "white";
-    });
-    backOfBoardTiles.forEach((tile) => {
-      tile.backgroundColor = "white";
-      tile.color = "white";
-    });
-  }
-
-  _restoreBoardDataInPlayerBoardDataArray() {
-    boardTileContainers.forEach((el, i) => {
-      this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
-      this.#color = backOfBoardTiles[i].style.color;
-      this.#text = backOfBoardTiles[i].textContent;
-      if (el.classList.contains("flip")) this.#flipStatus = true;
-      if (!el.classList.contains("flip")) this.#flipStatus = false;
-      let boardTile = new BoardTile(
-        this.#flipStatus,
-        this.#backgroundColor,
-        this.#color,
-        this.#text
-      );
-      this.#playerBoardDataArray.push(boardTile);
-    });
-    this.#playerBoardDataArray.splice(30);
-  }
-
-  _storeBoardDataInPlayerBoardDataArray() {
-    this.#playerBoardDataArray = [];
-    boardTileContainers.forEach((el, i) => {
-      this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
-      this.#color = backOfBoardTiles[i].style.color;
-      this.#text = backOfBoardTiles[i].textContent;
-      if (el.classList.contains("flipped")) this.#flipStatus = true;
-      if (!el.classList.contains("flipped")) this.#flipStatus = false;
-      let boardTile = new BoardTile(
-        this.#flipStatus,
-        this.#backgroundColor,
-        this.#color,
-        this.#text
-      );
-      this.#playerBoardDataArray.push(boardTile);
-    });
-    console.log(this.#playerBoardDataArray);
   }
 
   _toggleStatisticsModal() {
@@ -264,60 +429,6 @@ class App {
     setTimeout(() => {
       successMessage.classList.add("hidden");
     }, 1000);
-  }
-
-  _playTheGame(e) {
-    if (this.#theGameIsNotActive) return;
-
-    this._identifyCurrentRowOfPlay();
-    this._selectTilesInCurrentRowOfPlay();
-    this._identifyWhichKeyWasPressed(e);
-
-    if (this.#pressedKey === "Enter") {
-      this._checkIfGuessArrayIsFull();
-      if (!this.#guessArrayIsFull) {
-        this._shakeCurrentRowOfPlay();
-        this._displayErrorMessageWordTooShort();
-      }
-      if (this.#guessArrayIsFull) {
-        this._checkIfGuessIsAnAcceptableWord();
-        if (!this.#guessIsAnAcceptableWord) {
-          this._shakeCurrentRowOfPlay();
-          this._displayErrorMessageInvalidWord();
-        }
-        if (this.#guessIsAnAcceptableWord) {
-          this._submitPlayerGuess();
-          this._resetBoardTiles();
-          this._storeBoardDataInPlayerBoardDataArray();
-          this._setLocalStorageForBoardData();
-          if (this.#playerGuessMatchesTheAnswer) {
-            this._endTheGame();
-          }
-          if (!this.#playerGuessMatchesTheAnswer) {
-            this._checkIfPlayerIsOnFinalRow();
-            if (this.#playerIsOnFinalRowOfPlay) this._playerLost();
-            if (this.#playerLost) this._endTheGame();
-            this._moveToTheNextRowOfPlay();
-            this._resetGuessArrayToEmpty();
-          }
-        }
-      }
-    }
-
-    if (this.#pressedKey === "Backspace") {
-      this._removeLastLetterFromGuessArray();
-      this._setTheTextContentForTilesInCurrentRowOfPlay();
-      this._checkIfGuessArrayIsFull();
-    }
-
-    if (this.#pressedKey !== "Enter" && this.#pressedKey !== "Backspace") {
-      this._addLetterOfPressedKeyToGuessArray();
-      if (this.#keyPressedIsNotAcceptable)
-        this._removeLastLetterFromGuessArray();
-      this._checkIfGuessArrayIsFull();
-      if (this.#guessArrayIsFull) this._stopAddingLettersToGuessArray();
-      this._setTheTextContentForTilesInCurrentRowOfPlay();
-    }
   }
 
   _playerLost() {
@@ -460,18 +571,10 @@ class App {
     );
   }
 
-  _setLocalStorageForBoardData() {
-    console.log(this.#playerBoardDataArray);
-    localStorage.setItem(
-      "playerBoard",
-      JSON.stringify(this.#playerBoardDataArray)
-    );
-    localStorage.setItem("rowIndex", JSON.stringify(this.#rowIndex));
-  }
-
   _reset() {
     localStorage.removeItem("playerStatistics");
     localStorage.removeItem("playerBoard");
+    localStorage.removeItem("keyboard");
   }
 
   _checkIfPlayerGuessMatchesTheAnswer() {
@@ -489,31 +592,6 @@ class App {
       setTimeout(() => {
         el.classList.add("flip");
       }, i * 300);
-    });
-  }
-
-  _updateTileColors() {
-    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      if (tile.textContent !== this.#answerArray[i]) {
-        tile.style.backgroundColor = "grey";
-        tile.style.color = "white";
-      }
-      if (this.#answerArray.includes(tile.textContent)) {
-        tile.style.backgroundColor = "#d0b363";
-        tile.style.color = "white";
-      }
-      if (tile.textContent === this.#answerArray[i]) {
-        tile.style.backgroundColor = "#68a868";
-        tile.style.color = "white";
-      }
-      setTimeout(() => {
-        keyboardButtons.forEach((button) => {
-          if (button.value === tile.textContent) {
-            button.style.backgroundColor = tile.style.backgroundColor;
-            button.style.color = "white";
-          }
-        });
-      }, 2200);
     });
   }
 
