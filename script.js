@@ -46,12 +46,12 @@ class KeyboardButtonObject {
   }
 }
 
-class BoardTile {
-  constructor(flipStatus, backgroundColor, color, text) {
-    this.flipStatus = flipStatus;
-    this.backgroundColor = backgroundColor;
-    this.color = color;
-    this.text = text;
+class Tile {
+  constructor(tileFlipStatus, tileBackgroundColor, tileColor, tileText) {
+    this.tileFlipStatus = tileFlipStatus;
+    this.tileBackgroundColor = tileBackgroundColor;
+    this.tileColor = tileColor;
+    this.tileText = tileText;
   }
 }
 
@@ -81,10 +81,6 @@ class App {
   #playerLost = false;
   #playerDataArray;
   #playerBoardDataArray = [];
-  #flipStatus = false;
-  #backgroundColor;
-  #color;
-  #text;
   #keyboardButtonDataArray = [];
   #keyboardButtonBackgroundColor;
   #keyboardButtonColor;
@@ -98,8 +94,12 @@ class App {
     console.log(this.#answerArray);
     this._storeTheAnswerInLocalStorage();
     this._getTheBoardDataFromLocalStorage();
-    this._restoreBoardDataInPlayerBoardDataArray();
-    this._constructPlayerBoard();
+    this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
+    this._removeOldTileObjectsFromTheBoardDataArray();
+    // this._constructPlayerBoard();
+    this._setTheContentForTheBoardTiles();
+    this._flipTheTilesThatHaveContent();
+    console.log(this.#playerBoardDataArray);
     this._getLocalStorageForKeyboardData();
     this._getLocalStorageForPlayerStatistics();
     this._restoreDataToTheKeyboardButtonDataArray();
@@ -162,30 +162,52 @@ class App {
 
     this.#rowIndex = rowData + 1;
     this.#playerBoardDataArray = boardData;
+    console.log(this.#playerBoardDataArray);
   }
 
-  _;
-
-  _restoreBoardDataInPlayerBoardDataArray() {
-    boardTileContainers.forEach((el, i) => {
-      this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
-      this.#color = backOfBoardTiles[i].style.color;
-      this.#text = backOfBoardTiles[i].textContent;
-      if (el.classList.contains("flip")) this.#flipStatus = true;
-      if (!el.classList.contains("flip")) this.#flipStatus = false;
-      let boardTile = new BoardTile(
-        this.#flipStatus,
-        this.#backgroundColor,
-        this.#color,
-        this.#text
+  _createNewTileObjectsAndPushThemIntoTheBoardDataArray() {
+    boardTileContainers.forEach((tile, i) => {
+      let tileBackgroundColor = backOfBoardTiles[i].style.backgroundColor;
+      let tileColor = backOfBoardTiles[i].style.color;
+      let tileText = backOfBoardTiles[i].textContent;
+      let tileFlipStatus;
+      if (tile.classList.contains("flip")) tileFlipStatus = true;
+      if (!tile.classList.contains("flip")) tileFlipStatus = false;
+      let boardTile = new Tile(
+        tileFlipStatus,
+        tileBackgroundColor,
+        tileColor,
+        tileText
       );
       this.#playerBoardDataArray.push(boardTile);
     });
+  }
+
+  _removeOldTileObjectsFromTheBoardDataArray() {
     this.#playerBoardDataArray.splice(30);
+  }
+
+  _setTheContentForTheBoardTiles() {
+    backOfBoardTiles.forEach((tile, i) => {
+      tile.style.backgroundColor =
+        this.#playerBoardDataArray[i].tileBackgroundColor;
+      tile.style.color = this.#playerBoardDataArray[i].tileColor;
+      tile.textContent = this.#playerBoardDataArray[i].tileText;
+    });
+  }
+
+  _flipTheTilesThatHaveContent() {
+    boardTileContainers.forEach((tile, i) => {
+      if (this.#playerBoardDataArray[i].tileFlipStatus === true) {
+        tile.classList.add("flip");
+        tile.classList.add("flipped");
+      }
+    });
   }
 
   _constructPlayerBoard() {
     boardTileContainers.forEach((tile, i) => {
+      console.log(this.#playerBoardDataArray[i].backgroundColor);
       backOfBoardTiles[i].style.backgroundColor =
         this.#playerBoardDataArray[i].backgroundColor;
       backOfBoardTiles[i].textContent = this.#playerBoardDataArray[i].text;
@@ -368,17 +390,18 @@ class App {
 
   _storeBoardDataInPlayerBoardDataArray() {
     this.#playerBoardDataArray = [];
-    boardTileContainers.forEach((el, i) => {
-      this.#backgroundColor = backOfBoardTiles[i].style.backgroundColor;
-      this.#color = backOfBoardTiles[i].style.color;
-      this.#text = backOfBoardTiles[i].textContent;
-      if (el.classList.contains("flipped")) this.#flipStatus = true;
-      if (!el.classList.contains("flipped")) this.#flipStatus = false;
-      let boardTile = new BoardTile(
-        this.#flipStatus,
-        this.#backgroundColor,
-        this.#color,
-        this.#text
+    boardTileContainers.forEach((tile, i) => {
+      let tileBackgroundColor = backOfBoardTiles[i].style.backgroundColor;
+      let tileColor = backOfBoardTiles[i].style.color;
+      let tileText = backOfBoardTiles[i].textContent;
+      let tileFlipStatus;
+      if (tile.classList.contains("flipped")) tileFlipStatus = true;
+      if (!tile.classList.contains("flipped")) tileFlipStatus = false;
+      let boardTile = new Tile(
+        tileFlipStatus,
+        tileBackgroundColor,
+        tileColor,
+        tileText
       );
       this.#playerBoardDataArray.push(boardTile);
     });
