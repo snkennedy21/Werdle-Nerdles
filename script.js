@@ -38,6 +38,16 @@ const statisticsModal = document.querySelector(".statistics-modal");
 const statisticsModalCloseIcon = document.querySelector(
   ".statistics-modal__close-icon"
 );
+const numberOfGamesPlayed = document.querySelector(
+  ".statistics-modal__games-played"
+);
+const percentageOfGamesWon = document.querySelector(
+  ".statistics-modal__percent-games-won"
+);
+const currentStreak = document.querySelector(
+  ".statistics-modal__current-streak"
+);
+const maxStreak = document.querySelector(".statistics-modal__max-streak");
 
 class KeyboardButtonObject {
   constructor(backgroundColor, color) {
@@ -85,6 +95,8 @@ class App {
   #keyboardButtonBackgroundColor;
   #keyboardButtonColor;
   #thereIsNoAnAnswerInTheAnswerArray;
+  #playerData;
+  #thereIsDataForPlayerStatistics;
 
   constructor() {
     this._getTheAnswerFromLocalStorage();
@@ -96,15 +108,19 @@ class App {
     this._getTheBoardDataFromLocalStorage();
     this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
     this._removeOldTileObjectsFromTheBoardDataArray();
-    // this._constructPlayerBoard();
     this._setTheContentForTheBoardTiles();
     this._flipTheTilesThatHaveContent();
-    console.log(this.#playerBoardDataArray);
-    this._getLocalStorageForKeyboardData();
-    this._getLocalStorageForPlayerStatistics();
-    this._restoreDataToTheKeyboardButtonDataArray();
-    this._constructKeyboard();
-    this._displayPlayerStats();
+    this._getTheKeyboardDataFromLocalStorage();
+    this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
+    this._removeOldKeyboardButtonObjectsFromTheKeyboardButtonDataArray();
+    this._getDataForPlayersStatisticsFromLocalStorage();
+    this._checkIfThereIsDataForPlayerStatistics();
+    if (!this.#thereIsDataForPlayerStatistics)
+      this._setDataForPlayerStatisticsToZero();
+    if (this.#thereIsDataForPlayerStatistics)
+      this._updateDataForPlayerStatistics();
+    this._setTheColorsForTheKeyboardButtons();
+    this._displayPlayerStatis();
     this._buildArrayOfAllKeyboardValues();
 
     keyboard.addEventListener("click", this._playTheGame.bind(this));
@@ -205,21 +221,7 @@ class App {
     });
   }
 
-  _constructPlayerBoard() {
-    boardTileContainers.forEach((tile, i) => {
-      console.log(this.#playerBoardDataArray[i].backgroundColor);
-      backOfBoardTiles[i].style.backgroundColor =
-        this.#playerBoardDataArray[i].backgroundColor;
-      backOfBoardTiles[i].textContent = this.#playerBoardDataArray[i].text;
-      backOfBoardTiles[i].style.color = this.#playerBoardDataArray[i].color;
-      if (this.#playerBoardDataArray[i].flipStatus === true) {
-        tile.classList.add("flip");
-        tile.classList.add("flipped");
-      }
-    });
-  }
-
-  _getLocalStorageForKeyboardData() {
+  _getTheKeyboardDataFromLocalStorage() {
     const keyboardData = JSON.parse(localStorage.getItem("keyboard"));
 
     if (!keyboardData) return;
@@ -227,29 +229,7 @@ class App {
     this.#keyboardButtonDataArray = keyboardData;
   }
 
-  _getLocalStorageForPlayerStatistics() {
-    const playerData = JSON.parse(localStorage.getItem("playerStatistics"));
-    if (!playerData) {
-      this.#playerDataArray = [0, 0, 0, 0, 0];
-      this.#numberOfGamesPlayed = 0;
-      this.#numberOfGamesWon = 0;
-      this.#percentageOfGamesWon = 0;
-      this.#currentStreak = 0;
-      this.#maxStreak = 0;
-    }
-    if (playerData) {
-      this.#playerDataArray = playerData;
-      [
-        this.#numberOfGamesPlayed,
-        this.#numberOfGamesWon,
-        this.#percentageOfGamesWon,
-        this.#currentStreak,
-        this.#maxStreak,
-      ] = this.#playerDataArray;
-    }
-  }
-
-  _restoreDataToTheKeyboardButtonDataArray() {
+  _createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray() {
     keyboardButtons.forEach((button, i) => {
       this.#keyboardButtonBackgroundColor = button.style.backgroundColor;
       this.#keyboardButtonColor = button.style.color;
@@ -259,10 +239,42 @@ class App {
       );
       this.#keyboardButtonDataArray.push(keyboardButtonObject);
     });
+  }
+
+  _removeOldKeyboardButtonObjectsFromTheKeyboardButtonDataArray() {
     this.#keyboardButtonDataArray.splice(28);
   }
 
-  _constructKeyboard() {
+  _getDataForPlayersStatisticsFromLocalStorage() {
+    this.#playerData = JSON.parse(localStorage.getItem("playerStatistics"));
+  }
+
+  _checkIfThereIsDataForPlayerStatistics() {
+    if (!this.#playerData) this.#thereIsDataForPlayerStatistics = false;
+    if (this.#playerData) this.#thereIsDataForPlayerStatistics = true;
+  }
+
+  _setDataForPlayerStatisticsToZero() {
+    this.#playerDataArray = [0, 0, 0, 0, 0];
+    this.#numberOfGamesPlayed = 0;
+    this.#numberOfGamesWon = 0;
+    this.#percentageOfGamesWon = 0;
+    this.#currentStreak = 0;
+    this.#maxStreak = 0;
+  }
+
+  _updateDataForPlayerStatistics() {
+    this.#playerDataArray = this.#playerData;
+    [
+      this.#numberOfGamesPlayed,
+      this.#numberOfGamesWon,
+      this.#percentageOfGamesWon,
+      this.#currentStreak,
+      this.#maxStreak,
+    ] = this.#playerDataArray;
+  }
+
+  _setTheColorsForTheKeyboardButtons() {
     keyboardButtons.forEach((button, i) => {
       if ((button.style.backgroundColor = "#68a868"))
         button.style.backgroundColor = "#68a868";
@@ -272,17 +284,7 @@ class App {
     });
   }
 
-  _displayPlayerStats() {
-    const numberOfGamesPlayed = document.querySelector(
-      ".statistics-modal__games-played"
-    );
-    const percentageOfGamesWon = document.querySelector(
-      ".statistics-modal__percent-games-won"
-    );
-    const currentStreak = document.querySelector(
-      ".statistics-modal__current-streak"
-    );
-    const maxStreak = document.querySelector(".statistics-modal__max-streak");
+  _displayPlayerStatistics() {
     numberOfGamesPlayed.textContent = this.#numberOfGamesPlayed;
     percentageOfGamesWon.textContent = this.#percentageOfGamesWon;
     currentStreak.textContent = this.#currentStreak;
