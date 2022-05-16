@@ -88,7 +88,6 @@ class App {
   #numberOfGamesWon;
   #currentStreak;
   #maxStreak;
-  #playerLost = false;
   #playerDataArray;
   #playerBoardDataArray = [];
   #keyboardButtonDataArray = [];
@@ -336,6 +335,7 @@ class App {
             this.#numberOfGamesWon++;
             this.#currentStreak++;
             this._applyJumpAnimationForTilesInCurrentRowOfPlay();
+            this._displaySuccessMessage();
             this._checkIfTheMaxStreakShouldIncrease();
             this._calculateThePercentageOfGamesWon();
             this._updateValuesInThePlayerDataArray();
@@ -357,24 +357,24 @@ class App {
               this._storeTheDataForPlayerStatisticsInLocalStorage();
             }
             this._moveToTheNextRowOfPlay();
-            this._resetGuessArrayToEmpty();
+            this._resetTheGuessArrayToEmpty();
           }
         }
       }
     }
 
     if (this.#pressedKey === "Backspace") {
-      this._removeLastLetterFromGuessArray();
+      this._removeTheLastLetterFromTheGuessArray();
       this._setTheTextContentForTilesInCurrentRowOfPlay();
       // this._checkIfGuessArrayIsFull();
     }
 
     if (this.#pressedKey !== "Enter" && this.#pressedKey !== "Backspace") {
-      this._addLetterOfPressedKeyToGuessArray();
+      this._addTheLetterOfThePressedKeyToGuessArray();
       if (!this.#theKeyPressedIsAcceptable)
-        this._removeLastLetterFromGuessArray();
+        this._removeTheLastLetterFromTheGuessArray();
       this._checkIfGuessArrayIsFull();
-      if (this.#guessArrayIsFull) this._stopAddingLettersToGuessArray();
+      if (this.#guessArrayIsFull) this._stopAddingLettersToTheGuessArray();
       this._setTheTextContentForTilesInCurrentRowOfPlay();
     }
   }
@@ -532,6 +532,12 @@ class App {
     }
   }
 
+  _calculateThePercentageOfGamesWon() {
+    this.#percentageOfGamesWon = Math.floor(
+      (this.#numberOfGamesWon / this.#numberOfGamesPlayed) * 100
+    );
+  }
+
   _updateValuesInThePlayerDataArray() {
     this.#playerDataArray = [
       this.#numberOfGamesPlayed,
@@ -546,12 +552,20 @@ class App {
     this.#allTileContainersInCurrentRowOfPlay.forEach((tile, i) => {
       setTimeout(() => {
         tile.style.animation = `jump 0.5s ease-in-out ${i / 7}s`;
-        this._displaySuccessMessage();
       }, 2200);
       setTimeout(() => {
         tile.style.animation = ``;
       }, 4000);
     });
+  }
+
+  _displaySuccessMessage() {
+    setTimeout(() => {
+      successMessage.classList.remove("hidden");
+      setTimeout(() => {
+        successMessage.classList.add("hidden");
+      }, 1000);
+    }, 2300);
   }
 
   _setTheScoreForTheCurrentRound() {
@@ -560,6 +574,53 @@ class App {
     if (!this.#playerGuessMatchesTheAnswer) this.#scoreForCurrentRound = 6;
   }
 
+  _checkIfPlayerIsOnFinalRow() {
+    if (this.#rowIndex >= 5) {
+      this.#rowIndex = 5;
+      this.#playerIsOnFinalRowOfPlay = true;
+    }
+  }
+
+  _storeTheDataForPlayerStatisticsInLocalStorage() {
+    localStorage.setItem(
+      "playerStatistics",
+      JSON.stringify(this.#playerDataArray)
+    );
+  }
+
+  _moveToTheNextRowOfPlay() {
+    this.#rowIndex++;
+    if (this.#rowIndex > 6) this.#rowIndex = 6;
+  }
+
+  _resetTheGuessArrayToEmpty() {
+    this.#guessArray = [];
+  }
+
+  _removeTheLastLetterFromTheGuessArray() {
+    this.#guessArray.pop();
+  }
+
+  _addTheLetterOfThePressedKeyToGuessArray() {
+    this.#guessArray.push(this.#pressedKey);
+  }
+
+  _stopAddingLettersToTheGuessArray() {
+    if (this.#guessArray.length > 5) this.#guessArray.pop();
+  }
+
+  _setTheTextContentForTilesInCurrentRowOfPlay() {
+    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+      tile.textContent = this.#guessArray[i];
+    });
+    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+      tile.textContent = this.#guessArray[i];
+    });
+  }
+
+  /* ***************************
+  These methods handle modal toggles
+  *************************** */
   _resetGame() {
     this.#theGameIsNotActive = false;
     this._resetKeyboard();
@@ -598,24 +659,6 @@ class App {
     }
   }
 
-  _displaySuccessMessage() {
-    successMessage.classList.remove("hidden");
-    setTimeout(() => {
-      successMessage.classList.add("hidden");
-    }, 1000);
-  }
-
-  _playerLost() {
-    this.#playerLost = true;
-  }
-
-  _checkIfPlayerIsOnFinalRow() {
-    if (this.#rowIndex >= 5) {
-      this.#rowIndex = 5;
-      this.#playerIsOnFinalRowOfPlay = true;
-    }
-  }
-
   _resetKeyboard() {
     keyboardButtons.forEach((button) => {
       button.style.backgroundColor = "#d2d4d9";
@@ -623,54 +666,11 @@ class App {
     });
   }
 
-  _calculateThePercentageOfGamesWon() {
-    this.#percentageOfGamesWon = Math.floor(
-      (this.#numberOfGamesWon / this.#numberOfGamesPlayed) * 100
-    );
-  }
-
-  _storeTheDataForPlayerStatisticsInLocalStorage() {
-    localStorage.setItem(
-      "playerStatistics",
-      JSON.stringify(this.#playerDataArray)
-    );
-  }
-
   _reset() {
     localStorage.removeItem("playerStatistics");
     localStorage.removeItem("playerBoard");
     localStorage.removeItem("keyboard");
     localStorage.removeItem("answer");
-  }
-
-  _resetGuessArrayToEmpty() {
-    this.#guessArray = [];
-  }
-
-  _moveToTheNextRowOfPlay() {
-    this.#rowIndex++;
-    if (this.#rowIndex > 6) this.#rowIndex = 6;
-  }
-
-  _removeLastLetterFromGuessArray() {
-    this.#guessArray.pop();
-  }
-
-  _addLetterOfPressedKeyToGuessArray() {
-    this.#guessArray.push(this.#pressedKey);
-  }
-
-  _stopAddingLettersToGuessArray() {
-    if (this.#guessArray.length > 5) this.#guessArray.pop();
-  }
-
-  _setTheTextContentForTilesInCurrentRowOfPlay() {
-    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      tile.textContent = this.#guessArray[i];
-    });
-    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      tile.textContent = this.#guessArray[i];
-    });
   }
 }
 
