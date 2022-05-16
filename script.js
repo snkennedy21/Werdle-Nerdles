@@ -96,8 +96,12 @@ class App {
   #thereIsNoAnAnswerInTheAnswerArray;
   #playerData;
   #thereIsDataForPlayerStatistics;
+  #time = 86400;
 
   constructor() {
+    setInterval(() => {
+      this._countdown();
+    }, 1000);
     this._getTheDataForTheGameStateFromLocalStorage();
     this._getTheAnswerFromLocalStorage();
     this._checkIfThereIsCurrentlyAnAnswerInTheAnswerArray();
@@ -140,6 +144,37 @@ class App {
       "click",
       this._toggleStatisticsModal.bind(this)
     );
+  }
+
+  _makeMeTwoDigits(n) {
+    return (n < 10 ? "0" : "") + n;
+  }
+
+  _countdown() {
+    this.#time = this.#time - 1;
+    console.log(this.#time);
+    let second = 1;
+    let minute = second * 60;
+    let hour = minute * 60;
+    let day = hour * 24;
+
+    let textHour = Math.floor((this.#time % day) / hour);
+    let textMinute = Math.floor((this.#time % hour) / minute);
+    let textSecond = Math.floor((this.#time % minute) / second);
+
+    document.querySelector(".hours").textContent =
+      this._makeMeTwoDigits(textHour);
+    document.querySelector(".minutes").textContent =
+      this._makeMeTwoDigits(textMinute);
+    document.querySelector(".seconds").textContent =
+      this._makeMeTwoDigits(textSecond);
+  }
+
+  _resetTheWerdle() {
+    localStorage.removeItem("answer");
+    localStorage.removeItem("playerboard");
+    localStorage.removeItem("keyboard");
+    localStorage.removeItem("gamestate");
   }
 
   /* *********************************************************************************
