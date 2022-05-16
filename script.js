@@ -142,398 +142,9 @@ class App {
     );
   }
 
-  /* ***************************************
-  Methods that are handled by even listeners
-  *************************************** */
-
-  _playTheGame(e) {
-    if (this.#theGameIsNotActive) return;
-
-    this._identifyCurrentRowOfPlay();
-    this._selectTilesInCurrentRowOfPlay();
-    this._identifyWhichKeyWasPressed(e);
-
-    if (this.#pressedKey === "Enter") {
-      this._checkIfGuessArrayIsFull();
-      if (!this.#guessArrayIsFull) {
-        this._shakeCurrentRowOfPlay();
-        this._displayErrorMessageWordTooShort();
-      }
-      if (this.#guessArrayIsFull) {
-        this._checkIfTheGuessIsAnAcceptableWord();
-        if (!this.#theGuessIsAnAcceptableWord) {
-          this._shakeCurrentRowOfPlay();
-          this._displayErrorMessageInvalidWord();
-        }
-        if (this.#theGuessIsAnAcceptableWord) {
-          this._checkIfPlayerGuessMatchesTheAnswer();
-          this._updateTheColorsForTheTilesAndKeyboardButtons();
-          this._flipTiles();
-          // this._resetBoardTiles();
-          this.#playerBoardDataArray = [];
-          this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
-          setTimeout(() => {
-            this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
-            this._removeOldKeyboardButtonObjectsFromTheBeginningOfTheKeyboardButtonDataArray();
-            this._setLocalStorageForKeyboardData();
-          }, 2200);
-          this._setLocalStorageForBoardData();
-          if (this.#playerGuessMatchesTheAnswer) {
-            this._endTheGame();
-          }
-          if (!this.#playerGuessMatchesTheAnswer) {
-            this._checkIfPlayerIsOnFinalRow();
-            if (this.#playerIsOnFinalRowOfPlay) this._playerLost();
-            if (this.#playerLost) this._endTheGame();
-            this._moveToTheNextRowOfPlay();
-            this._resetGuessArrayToEmpty();
-          }
-        }
-      }
-    }
-
-    if (this.#pressedKey === "Backspace") {
-      this._removeLastLetterFromGuessArray();
-      this._setTheTextContentForTilesInCurrentRowOfPlay();
-      this._checkIfGuessArrayIsFull();
-    }
-
-    if (this.#pressedKey !== "Enter" && this.#pressedKey !== "Backspace") {
-      this._addLetterOfPressedKeyToGuessArray();
-      if (!this.#theKeyPressedIsAcceptable)
-        this._removeLastLetterFromGuessArray();
-      this._checkIfGuessArrayIsFull();
-      if (this.#guessArrayIsFull) this._stopAddingLettersToGuessArray();
-      this._setTheTextContentForTilesInCurrentRowOfPlay();
-    }
-  }
-
-  _identifyCurrentRowOfPlay() {
-    this.#currentRowOfPlay = allBoardRows[this.#rowIndex];
-  }
-
-  _selectTilesInCurrentRowOfPlay() {
-    this.#frontOfAllTilesInCurrentRowOfPlay =
-      this.#currentRowOfPlay.querySelectorAll(".front");
-    this.#backOfAllTilesInCurrentRowOfPlay =
-      this.#currentRowOfPlay.querySelectorAll(".back");
-    this.#allTileContainersInCurrentRowOfPlay =
-      this.#currentRowOfPlay.querySelectorAll(".board__tile__container");
-  }
-
-  _identifyWhichKeyWasPressed(e) {
-    e.preventDefault();
-    if (e.type === "keydown") {
-      this._setTheValueForThePressedKey(e);
-    }
-    if (e.type === "click") {
-      this.#theKeyPressedIsAcceptable = true;
-      this.#pressedKey = e.target.closest(".keyboard__button").value;
-    }
-  }
-
-  _setTheValueForThePressedKey(e) {
-    if (
-      this.#arrayOfAllKeyboardValues.includes(
-        e.key[0].toUpperCase() + e.key.slice(1)
-      )
-    ) {
-      this.#pressedKey = e.key[0].toUpperCase() + e.key.slice(1);
-      this.#theKeyPressedIsAcceptable = true;
-    } else {
-      this.#pressedKey = " ";
-      this.#theKeyPressedIsAcceptable = false;
-    }
-  }
-
-  _checkIfGuessArrayIsFull() {
-    if (this.#guessArray.length < 5) this.#guessArrayIsFull = false;
-    if (this.#guessArray.length >= 5) this.#guessArrayIsFull = true;
-  }
-
-  _shakeCurrentRowOfPlay() {
-    this.#currentRowOfPlay.style.animation = "shake 0.3s linear";
-    setTimeout(() => {
-      this.#currentRowOfPlay.style.animation = "";
-    }, 400);
-  }
-
-  _displayErrorMessageWordTooShort() {
-    errorMessageWordTooShort.classList.remove("hidden");
-    setTimeout(() => {
-      errorMessageWordTooShort.classList.add("hidden");
-    }, 1000);
-  }
-
-  _checkIfTheGuessIsAnAcceptableWord() {
-    if (!acceptableWordList.includes(this.#guessArray.join(""))) {
-      this.#theGuessIsAnAcceptableWord = false;
-    }
-    if (acceptableWordList.includes(this.#guessArray.join(""))) {
-      this.#theGuessIsAnAcceptableWord = true;
-    }
-  }
-
-  _displayErrorMessageInvalidWord() {
-    errorMessageInvalidWord.classList.remove("hidden");
-    setTimeout(() => {
-      errorMessageInvalidWord.classList.add("hidden");
-    }, 1000);
-  }
-
-  _checkIfPlayerGuessMatchesTheAnswer() {
-    if (!this.#guessArray.every((el, i) => el === this.#answerArray[i])) {
-      this.#playerGuessMatchesTheAnswer = false;
-    }
-    if (this.#guessArray.every((el, i) => el === this.#answerArray[i])) {
-      this.#playerGuessMatchesTheAnswer = true;
-    }
-  }
-
-  _updateTheColorsForTheTilesAndKeyboardButtons() {
-    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      // Update the tile colors based on guess
-      if (tile.textContent !== this.#answerArray[i]) {
-        tile.style.backgroundColor = "grey";
-        tile.style.color = "white";
-      }
-      if (this.#answerArray.includes(tile.textContent)) {
-        tile.style.backgroundColor = "#d0b363";
-        tile.style.color = "white";
-      }
-      if (tile.textContent === this.#answerArray[i]) {
-        tile.style.backgroundColor = "#68a868";
-        tile.style.color = "white";
-      }
-
-      // Update the keyboard button colors based on guess
-      keyboardButtons.forEach((button) => {
-        if (button.value === tile.textContent) {
-          setTimeout(() => {
-            button.style.color = "white";
-            if (button.style.backgroundColor === "rgb(104, 168, 104)") {
-              button.style.backgroundColor = "rgb(104, 168, 104)";
-            }
-            if (button.style.backgroundColor !== "rgb(104, 168, 104)") {
-              button.style.backgroundColor = tile.style.backgroundColor;
-            }
-          }, 2200);
-        }
-      });
-    });
-  }
-
-  _flipTiles() {
-    this.#allTileContainersInCurrentRowOfPlay.forEach((el, i) => {
-      el.classList.add("flipped");
-      setTimeout(() => {
-        el.classList.add("flip");
-      }, i * 300);
-    });
-  }
-
-  _removeOldKeyboardButtonObjectsFromTheBeginningOfTheKeyboardButtonDataArray() {
-    this.#keyboardButtonDataArray.splice(0, 28);
-  }
-
-  _resetBoardTiles() {
-    frontOfBoardTiles.forEach((tile) => {
-      tile.backgroundColor = "white";
-    });
-    backOfBoardTiles.forEach((tile) => {
-      tile.backgroundColor = "white";
-      tile.color = "white";
-    });
-  }
-
-  _setLocalStorageForKeyboardData() {
-    console.log(this.#keyboardButtonDataArray);
-    localStorage.setItem(
-      "keyboard",
-      JSON.stringify(this.#keyboardButtonDataArray)
-    );
-  }
-
-  _setLocalStorageForBoardData() {
-    localStorage.setItem(
-      "playerBoard",
-      JSON.stringify(this.#playerBoardDataArray)
-    );
-    localStorage.setItem("rowIndex", JSON.stringify(this.#rowIndex));
-  }
-
-  _resetGame() {
-    this.#theGameIsNotActive = false;
-    this._resetKeyboard();
-  }
-
-  _toggleStatisticsModal() {
-    statisticsModalContainer.classList.toggle("invisible");
-    statisticsModal.classList.toggle("transform-up");
-  }
-
-  _toggleModal(e) {
-    modalContainer.classList.toggle("invisible");
-    if (e.target.classList.contains("header__rules-icon")) {
-      settingsModal.classList.toggle("hidden");
-      rulesModal.classList.toggle("translate-up");
-      setTimeout(() => {
-        exampleDivFlips.forEach((el) => {
-          el.classList.toggle("flip");
-        });
-      }, 200);
-    }
-    if (e.target.classList.contains("rules-modal__close-icon")) {
-      rulesModal.classList.toggle("translate-up");
-      setTimeout(() => {
-        settingsModal.classList.toggle("hidden");
-        exampleDivFlips.forEach((el) => {
-          el.classList.toggle("flip");
-        });
-      }, 200);
-    }
-    if (
-      e.target.classList.contains("header__settings-icon") ||
-      e.target.classList.contains("settings-modal__close-icon")
-    ) {
-      settingsModal.classList.toggle("translate-up");
-    }
-  }
-
-  _displaySuccessMessage() {
-    successMessage.classList.remove("hidden");
-    setTimeout(() => {
-      successMessage.classList.add("hidden");
-    }, 1000);
-  }
-
-  _playerLost() {
-    this.#playerLost = true;
-  }
-
-  _checkIfPlayerIsOnFinalRow() {
-    if (this.#rowIndex >= 5) {
-      this.#rowIndex = 5;
-      this.#playerIsOnFinalRowOfPlay = true;
-    }
-  }
-
-  _resetKeyboard() {
-    keyboardButtons.forEach((button) => {
-      button.style.backgroundColor = "#d2d4d9";
-      button.style.color = "black";
-    });
-  }
-
-  _calculatePercentageOfGamesWon() {
-    this.#percentageOfGamesWon = Math.floor(
-      (this.#numberOfGamesWon / this.#numberOfGamesPlayed) * 100
-    );
-  }
-
-  _endTheGame() {
-    if (this.#numberOfGamesPlayed === undefined) this.#numberOfGamesPlayed = 0;
-    if (this.#numberOfGamesWon === undefined) this.#numberOfGamesWon = 0;
-    if (this.#percentageOfGamesWon === undefined)
-      this.#percentageOfGamesWon = 0;
-    if (this.#currentStreak === undefined) this.#currentStreak = 0;
-    if (this.#maxStreak === undefined) this.#maxStreak = 0;
-    if (this.#playerLost) {
-      this.#numberOfGamesPlayed++;
-      this._calculatePercentageOfGamesWon();
-      this.#currentStreak = 0;
-      this.#playerDataArray = [
-        this.#numberOfGamesPlayed,
-        this.#numberOfGamesWon,
-        this.#percentageOfGamesWon,
-        this.#currentStreak,
-        this.#maxStreak,
-      ];
-      console.log(this.#playerDataArray);
-      this.#scoreForCurrentRound = 6;
-      this.#numberOfGamesPlayed++;
-    }
-
-    if (!this.#playerLost) {
-      this.#allTileContainersInCurrentRowOfPlay.forEach((tile, i) => {
-        setTimeout(() => {
-          tile.style.animation = `jump 0.5s ease-in-out ${i / 7}s`;
-          this._displaySuccessMessage();
-        }, 2200);
-        setTimeout(() => {
-          tile.style.animation = ``;
-        }, 4000);
-      });
-
-      this.#numberOfGamesPlayed++;
-      this.#numberOfGamesWon++;
-      this._calculatePercentageOfGamesWon();
-      this.#currentStreak++;
-      if (this.#currentStreak > this.#maxStreak) {
-        this.#maxStreak = this.#currentStreak;
-      }
-      this.#playerDataArray = [
-        this.#numberOfGamesPlayed,
-        this.#numberOfGamesWon,
-        this.#percentageOfGamesWon,
-        this.#currentStreak,
-        this.#maxStreak,
-      ];
-      console.log(this.#playerDataArray);
-      this.#scoreForCurrentRound = this.#rowIndex + 1;
-    }
-    this._displayPlayerStatistics();
-    this.#theGameIsNotActive = true;
-    this._setLocalStorageForPlayerData();
-  }
-
-  _setLocalStorageForPlayerData() {
-    localStorage.setItem(
-      "playerStatistics",
-      JSON.stringify(this.#playerDataArray)
-    );
-  }
-
-  _reset() {
-    localStorage.removeItem("playerStatistics");
-    localStorage.removeItem("playerBoard");
-    localStorage.removeItem("keyboard");
-    localStorage.removeItem("answer");
-  }
-
-  _resetGuessArrayToEmpty() {
-    this.#guessArray = [];
-  }
-
-  _moveToTheNextRowOfPlay() {
-    this.#rowIndex++;
-  }
-
-  _removeLastLetterFromGuessArray() {
-    this.#guessArray.pop();
-  }
-
-  _addLetterOfPressedKeyToGuessArray() {
-    this.#guessArray.push(this.#pressedKey);
-  }
-
-  _stopAddingLettersToGuessArray() {
-    if (this.#guessArray.length > 5) this.#guessArray.pop();
-  }
-
-  _setTheTextContentForTilesInCurrentRowOfPlay() {
-    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      tile.textContent = this.#guessArray[i];
-    });
-    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      tile.textContent = this.#guessArray[i];
-    });
-  }
-
-  /* ********************************************************
-  Methods that are called immediately by constructor function
-  ******************************************************** */
-
+  /* *********************************************************************************
+  These methods are called immediately by the constructor function when the page loads
+  ********************************************************************************* */
   _getTheAnswerFromLocalStorage() {
     let answer = JSON.parse(localStorage.getItem("answer"));
     if (!answer) return;
@@ -682,6 +293,383 @@ class App {
   _buildArrayOfAllKeyboardValues() {
     keyboardButtons.forEach((el) => {
       this.#arrayOfAllKeyboardValues.push(el.value);
+    });
+  }
+
+  /* *******************************************************************
+  This method runs the game whenever a letter/backspace/enter is pressed
+  ******************************************************************* */
+  _playTheGame(e) {
+    if (this.#theGameIsNotActive) return;
+
+    this._identifyCurrentRowOfPlay();
+    this._selectTilesInCurrentRowOfPlay();
+    this._identifyWhichKeyWasPressed(e);
+
+    if (this.#pressedKey === "Enter") {
+      this._checkIfGuessArrayIsFull();
+      if (!this.#guessArrayIsFull) {
+        this._shakeCurrentRowOfPlay();
+        this._displayErrorMessageWordTooShort();
+      }
+      if (this.#guessArrayIsFull) {
+        this._checkIfTheGuessIsAnAcceptableWord();
+        if (!this.#theGuessIsAnAcceptableWord) {
+          this._shakeCurrentRowOfPlay();
+          this._displayErrorMessageInvalidWord();
+        }
+        if (this.#theGuessIsAnAcceptableWord) {
+          this._checkIfPlayerGuessMatchesTheAnswer();
+          this._updateTheColorsForTheTilesAndKeyboardButtons();
+          this._flipTiles();
+          // this._resetBoardTiles();
+          this.#playerBoardDataArray = [];
+          this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
+          setTimeout(() => {
+            this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
+            this._removeOldKeyboardButtonObjectsFromTheBeginningOfTheKeyboardButtonDataArray();
+            this._storeTheKeyboardDataInLocalStorage();
+          }, 2200);
+          this._storeTheBoardDataInLocalStorage();
+          if (this.#playerGuessMatchesTheAnswer) {
+            this.#numberOfGamesPlayed++;
+            this.#numberOfGamesWon++;
+            this.#currentStreak++;
+            this._applyJumpAnimationForTilesInCurrentRowOfPlay();
+            this._checkIfTheMaxStreakShouldIncrease();
+            this._calculateThePercentageOfGamesWon();
+            this._updateValuesInThePlayerDataArray();
+            this._setTheScoreForTheCurrentRound();
+            this._displayPlayerStatistics();
+            this.#theGameIsNotActive = true;
+            this._storeTheDataForPlayerStatisticsInLocalStorage();
+          }
+          if (!this.#playerGuessMatchesTheAnswer) {
+            this._checkIfPlayerIsOnFinalRow();
+            if (this.#playerIsOnFinalRowOfPlay) {
+              this.#numberOfGamesPlayed++;
+              this.#currentStreak = 0;
+              this._calculateThePercentageOfGamesWon();
+              this._updateValuesInThePlayerDataArray();
+              this._setTheScoreForTheCurrentRound();
+              this._displayPlayerStatistics();
+              this.#theGameIsNotActive = true;
+              this._storeTheDataForPlayerStatisticsInLocalStorage();
+            }
+            this._moveToTheNextRowOfPlay();
+            this._resetGuessArrayToEmpty();
+          }
+        }
+      }
+    }
+
+    if (this.#pressedKey === "Backspace") {
+      this._removeLastLetterFromGuessArray();
+      this._setTheTextContentForTilesInCurrentRowOfPlay();
+      // this._checkIfGuessArrayIsFull();
+    }
+
+    if (this.#pressedKey !== "Enter" && this.#pressedKey !== "Backspace") {
+      this._addLetterOfPressedKeyToGuessArray();
+      if (!this.#theKeyPressedIsAcceptable)
+        this._removeLastLetterFromGuessArray();
+      this._checkIfGuessArrayIsFull();
+      if (this.#guessArrayIsFull) this._stopAddingLettersToGuessArray();
+      this._setTheTextContentForTilesInCurrentRowOfPlay();
+    }
+  }
+
+  /* ****************************************************
+  These are all the methods called in the playGame method
+  **************************************************** */
+  _identifyCurrentRowOfPlay() {
+    this.#currentRowOfPlay = allBoardRows[this.#rowIndex];
+  }
+
+  _selectTilesInCurrentRowOfPlay() {
+    this.#frontOfAllTilesInCurrentRowOfPlay =
+      this.#currentRowOfPlay.querySelectorAll(".front");
+    this.#backOfAllTilesInCurrentRowOfPlay =
+      this.#currentRowOfPlay.querySelectorAll(".back");
+    this.#allTileContainersInCurrentRowOfPlay =
+      this.#currentRowOfPlay.querySelectorAll(".board__tile__container");
+  }
+
+  _identifyWhichKeyWasPressed(e) {
+    e.preventDefault();
+    if (e.type === "keydown") {
+      this._setTheValueForThePressedKey(e);
+    }
+    if (e.type === "click") {
+      this.#theKeyPressedIsAcceptable = true;
+      this.#pressedKey = e.target.closest(".keyboard__button").value;
+    }
+  }
+
+  _setTheValueForThePressedKey(e) {
+    if (
+      this.#arrayOfAllKeyboardValues.includes(
+        e.key[0].toUpperCase() + e.key.slice(1)
+      )
+    ) {
+      this.#pressedKey = e.key[0].toUpperCase() + e.key.slice(1);
+      this.#theKeyPressedIsAcceptable = true;
+    } else {
+      this.#pressedKey = " ";
+      this.#theKeyPressedIsAcceptable = false;
+    }
+  }
+
+  _checkIfGuessArrayIsFull() {
+    if (this.#guessArray.length < 5) this.#guessArrayIsFull = false;
+    if (this.#guessArray.length >= 5) this.#guessArrayIsFull = true;
+  }
+
+  _shakeCurrentRowOfPlay() {
+    this.#currentRowOfPlay.style.animation = "shake 0.3s linear";
+    setTimeout(() => {
+      this.#currentRowOfPlay.style.animation = "";
+    }, 400);
+  }
+
+  _displayErrorMessageWordTooShort() {
+    errorMessageWordTooShort.classList.remove("hidden");
+    setTimeout(() => {
+      errorMessageWordTooShort.classList.add("hidden");
+    }, 1000);
+  }
+
+  _checkIfTheGuessIsAnAcceptableWord() {
+    if (!acceptableWordList.includes(this.#guessArray.join(""))) {
+      this.#theGuessIsAnAcceptableWord = false;
+    }
+    if (acceptableWordList.includes(this.#guessArray.join(""))) {
+      this.#theGuessIsAnAcceptableWord = true;
+    }
+  }
+
+  _displayErrorMessageInvalidWord() {
+    errorMessageInvalidWord.classList.remove("hidden");
+    setTimeout(() => {
+      errorMessageInvalidWord.classList.add("hidden");
+    }, 1000);
+  }
+
+  _checkIfPlayerGuessMatchesTheAnswer() {
+    if (!this.#guessArray.every((el, i) => el === this.#answerArray[i])) {
+      this.#playerGuessMatchesTheAnswer = false;
+    }
+    if (this.#guessArray.every((el, i) => el === this.#answerArray[i])) {
+      this.#playerGuessMatchesTheAnswer = true;
+    }
+  }
+
+  _updateTheColorsForTheTilesAndKeyboardButtons() {
+    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+      // Update the tile colors based on guess
+      if (tile.textContent !== this.#answerArray[i]) {
+        tile.style.backgroundColor = "grey";
+        tile.style.color = "white";
+      }
+      if (this.#answerArray.includes(tile.textContent)) {
+        tile.style.backgroundColor = "#d0b363";
+        tile.style.color = "white";
+      }
+      if (tile.textContent === this.#answerArray[i]) {
+        tile.style.backgroundColor = "#68a868";
+        tile.style.color = "white";
+      }
+
+      // Update the keyboard button colors based on guess
+      keyboardButtons.forEach((button) => {
+        if (button.value === tile.textContent) {
+          setTimeout(() => {
+            button.style.color = "white";
+            if (button.style.backgroundColor === "rgb(104, 168, 104)") {
+              button.style.backgroundColor = "rgb(104, 168, 104)";
+            }
+            if (button.style.backgroundColor !== "rgb(104, 168, 104)") {
+              button.style.backgroundColor = tile.style.backgroundColor;
+            }
+          }, 2200);
+        }
+      });
+    });
+  }
+
+  _flipTiles() {
+    this.#allTileContainersInCurrentRowOfPlay.forEach((el, i) => {
+      el.classList.add("flipped");
+      setTimeout(() => {
+        el.classList.add("flip");
+      }, i * 300);
+    });
+  }
+
+  _removeOldKeyboardButtonObjectsFromTheBeginningOfTheKeyboardButtonDataArray() {
+    this.#keyboardButtonDataArray.splice(0, 28);
+  }
+
+  _storeTheKeyboardDataInLocalStorage() {
+    console.log(this.#keyboardButtonDataArray);
+    localStorage.setItem(
+      "keyboard",
+      JSON.stringify(this.#keyboardButtonDataArray)
+    );
+  }
+
+  _storeTheBoardDataInLocalStorage() {
+    localStorage.setItem(
+      "playerBoard",
+      JSON.stringify(this.#playerBoardDataArray)
+    );
+    localStorage.setItem("rowIndex", JSON.stringify(this.#rowIndex));
+  }
+
+  _checkIfTheMaxStreakShouldIncrease() {
+    if (this.#currentStreak > this.#maxStreak) {
+      this.#maxStreak = this.#currentStreak;
+    }
+  }
+
+  _updateValuesInThePlayerDataArray() {
+    this.#playerDataArray = [
+      this.#numberOfGamesPlayed,
+      this.#numberOfGamesWon,
+      this.#percentageOfGamesWon,
+      this.#currentStreak,
+      this.#maxStreak,
+    ];
+  }
+
+  _applyJumpAnimationForTilesInCurrentRowOfPlay() {
+    this.#allTileContainersInCurrentRowOfPlay.forEach((tile, i) => {
+      setTimeout(() => {
+        tile.style.animation = `jump 0.5s ease-in-out ${i / 7}s`;
+        this._displaySuccessMessage();
+      }, 2200);
+      setTimeout(() => {
+        tile.style.animation = ``;
+      }, 4000);
+    });
+  }
+
+  _setTheScoreForTheCurrentRound() {
+    if (this.#playerGuessMatchesTheAnswer)
+      this.#scoreForCurrentRound = this.#rowIndex + 1;
+    if (!this.#playerGuessMatchesTheAnswer) this.#scoreForCurrentRound = 6;
+  }
+
+  _resetGame() {
+    this.#theGameIsNotActive = false;
+    this._resetKeyboard();
+  }
+
+  _toggleStatisticsModal() {
+    statisticsModalContainer.classList.toggle("invisible");
+    statisticsModal.classList.toggle("transform-up");
+  }
+
+  _toggleModal(e) {
+    modalContainer.classList.toggle("invisible");
+    if (e.target.classList.contains("header__rules-icon")) {
+      settingsModal.classList.toggle("hidden");
+      rulesModal.classList.toggle("translate-up");
+      setTimeout(() => {
+        exampleDivFlips.forEach((el) => {
+          el.classList.toggle("flip");
+        });
+      }, 200);
+    }
+    if (e.target.classList.contains("rules-modal__close-icon")) {
+      rulesModal.classList.toggle("translate-up");
+      setTimeout(() => {
+        settingsModal.classList.toggle("hidden");
+        exampleDivFlips.forEach((el) => {
+          el.classList.toggle("flip");
+        });
+      }, 200);
+    }
+    if (
+      e.target.classList.contains("header__settings-icon") ||
+      e.target.classList.contains("settings-modal__close-icon")
+    ) {
+      settingsModal.classList.toggle("translate-up");
+    }
+  }
+
+  _displaySuccessMessage() {
+    successMessage.classList.remove("hidden");
+    setTimeout(() => {
+      successMessage.classList.add("hidden");
+    }, 1000);
+  }
+
+  _playerLost() {
+    this.#playerLost = true;
+  }
+
+  _checkIfPlayerIsOnFinalRow() {
+    if (this.#rowIndex >= 5) {
+      this.#rowIndex = 5;
+      this.#playerIsOnFinalRowOfPlay = true;
+    }
+  }
+
+  _resetKeyboard() {
+    keyboardButtons.forEach((button) => {
+      button.style.backgroundColor = "#d2d4d9";
+      button.style.color = "black";
+    });
+  }
+
+  _calculateThePercentageOfGamesWon() {
+    this.#percentageOfGamesWon = Math.floor(
+      (this.#numberOfGamesWon / this.#numberOfGamesPlayed) * 100
+    );
+  }
+
+  _storeTheDataForPlayerStatisticsInLocalStorage() {
+    localStorage.setItem(
+      "playerStatistics",
+      JSON.stringify(this.#playerDataArray)
+    );
+  }
+
+  _reset() {
+    localStorage.removeItem("playerStatistics");
+    localStorage.removeItem("playerBoard");
+    localStorage.removeItem("keyboard");
+    localStorage.removeItem("answer");
+  }
+
+  _resetGuessArrayToEmpty() {
+    this.#guessArray = [];
+  }
+
+  _moveToTheNextRowOfPlay() {
+    this.#rowIndex++;
+    if (this.#rowIndex > 6) this.#rowIndex = 6;
+  }
+
+  _removeLastLetterFromGuessArray() {
+    this.#guessArray.pop();
+  }
+
+  _addLetterOfPressedKeyToGuessArray() {
+    this.#guessArray.push(this.#pressedKey);
+  }
+
+  _stopAddingLettersToGuessArray() {
+    if (this.#guessArray.length > 5) this.#guessArray.pop();
+  }
+
+  _setTheTextContentForTilesInCurrentRowOfPlay() {
+    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+      tile.textContent = this.#guessArray[i];
+    });
+    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+      tile.textContent = this.#guessArray[i];
     });
   }
 }
