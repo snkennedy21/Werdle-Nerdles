@@ -79,15 +79,22 @@ body {
 }
 
 .message {
+  background-color: black;
   text-align: center;
-  top: 50%;
+  top: 20%;
   left: 50%;
   position: absolute;
   z-index: 4;
   transform: translate(-50%, -50%);
-  font-size: 3rem;
+  width: 70%;
+  padding: 2rem 1rem;
+  border-radius: 0.5rem;
+}
+
+.message-text {
+  color: white;
+  font-size: 1.8rem;
   font-weight: 700;
-  width: 100%;
 }
 
 .board__row {

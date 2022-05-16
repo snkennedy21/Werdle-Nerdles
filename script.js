@@ -66,7 +66,7 @@ class Tile {
 }
 
 class App {
-  #theGameIsNotActive = false;
+  #theGameIsNotActive;
   #scoreForCurrentRound;
   #guessArray = [];
   #answerArray = [];
@@ -98,6 +98,7 @@ class App {
   #thereIsDataForPlayerStatistics;
 
   constructor() {
+    this._getTheDataForTheGameStateFromLocalStorage();
     this._getTheAnswerFromLocalStorage();
     this._checkIfThereIsCurrentlyAnAnswerInTheAnswerArray();
     if (this.#thereIsNoAnAnswerInTheAnswerArray)
@@ -144,6 +145,12 @@ class App {
   /* *********************************************************************************
   These methods are called immediately by the constructor function when the page loads
   ********************************************************************************* */
+  _getTheDataForTheGameStateFromLocalStorage() {
+    let gamestate = JSON.parse(localStorage.getItem("gamestate"));
+    if (gamestate === null) this.#theGameIsNotActive = false;
+    if (gamestate !== null) this.#theGameIsNotActive = gamestate;
+  }
+
   _getTheAnswerFromLocalStorage() {
     let answer = JSON.parse(localStorage.getItem("answer"));
     if (!answer) return;
@@ -359,6 +366,8 @@ class App {
             this._moveToTheNextRowOfPlay();
             this._resetTheGuessArrayToEmpty();
           }
+          console.log(this.#theGameIsNotActive);
+          this._storeTheDataForGameStateInLocalStorage();
         }
       }
     }
@@ -588,6 +597,10 @@ class App {
     );
   }
 
+  _storeTheDataForGameStateInLocalStorage() {
+    localStorage.setItem("gamestate", JSON.stringify(this.#theGameIsNotActive));
+  }
+
   _moveToTheNextRowOfPlay() {
     this.#rowIndex++;
     if (this.#rowIndex > 6) this.#rowIndex = 6;
@@ -621,10 +634,6 @@ class App {
   /* ***************************
   These methods handle modal toggles
   *************************** */
-  _resetGame() {
-    this.#theGameIsNotActive = false;
-    this._resetKeyboard();
-  }
 
   _toggleStatisticsModal() {
     statisticsModalContainer.classList.toggle("invisible");
@@ -671,6 +680,7 @@ class App {
     localStorage.removeItem("playerBoard");
     localStorage.removeItem("keyboard");
     localStorage.removeItem("answer");
+    localStorage.removeItem("gamestate");
   }
 }
 
