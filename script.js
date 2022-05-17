@@ -96,10 +96,13 @@ class App {
   #thereIsNoAnAnswerInTheAnswerArray;
   #playerData;
   #thereIsDataForPlayerStatistics;
-  #time = 86400;
+  #upcomingMidnight;
+  #now;
+  #timeUntilMidnight;
 
   constructor() {
-    this._getTimeFromLocalStorage();
+    // this._getDateAndTimeFromLocalStorage();
+    this._setDateAndTime();
     this._countdown();
     this._getTheDataForTheGameStateFromLocalStorage();
     this._getTheAnswerFromLocalStorage();
@@ -116,8 +119,7 @@ class App {
     this._getTheKeyboardDataFromLocalStorage();
     this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
     this._removeOldKeyboardButtonObjectsFromTheEndOfTheKeyboardButtonDataArray();
-    this._getDataForPlayersStatisticsFromLocalStorage();
-    this._checkIfThereIsDataForPlayerStatistics();
+    this._getDataForPlayerStatisticsFromLocalStorage();
     if (!this.#thereIsDataForPlayerStatistics)
       this._setDataForPlayerStatisticsToZero();
     if (this.#thereIsDataForPlayerStatistics)
@@ -149,18 +151,27 @@ class App {
     return (n < 10 ? "0" : "") + n;
   }
 
+  _setDateAndTime() {
+    this.#upcomingMidnight = new Date();
+    this.#upcomingMidnight.setHours(24, 0, 0, 0);
+    this.#now = new Date().setHours(23, 59, 40, 0);
+  }
+
+  _calculateTimeUntileMidnight() {
+    this.#timeUntilMidnight = this.#upcomingMidnight.getTime() - this.#now;
+  }
+
   _countdown() {
+    this._calculateTimeUntileMidnight();
     setInterval(() => {
-      this.#time = this.#time - 1;
-      console.log(this.#time);
-      let second = 1;
+      let second = 1000;
       let minute = second * 60;
       let hour = minute * 60;
       let day = hour * 24;
 
-      let textHour = Math.floor((this.#time % day) / hour);
-      let textMinute = Math.floor((this.#time % hour) / minute);
-      let textSecond = Math.floor((this.#time % minute) / second);
+      let textHour = Math.floor((this.#timeUntilMidnight % day) / hour);
+      let textMinute = Math.floor((this.#timeUntilMidnight % hour) / minute);
+      let textSecond = Math.floor((this.#timeUntilMidnight % minute) / second);
 
       document.querySelector(".time").textContent = `${this._makeNumbeTwoDigits(
         textHour
@@ -168,23 +179,42 @@ class App {
         textSecond
       )}`;
 
-      this._storeTimeInLocalStorage();
+      this.#timeUntilMidnight = this.#timeUntilMidnight - 1000;
+      if (this.#timeUntilMidnight < 0) {
+        this.#now = new Date().getTime();
+        this.#upcomingMidnight = new Date();
+        this.#upcomingMidnight.setHours(24, 0, 0, 0);
+        this._calculateTimeUntileMidnight();
+        if (!this.#theGameIsNotActive) this.#currentStreak = 0;
+        this._updateValuesInThePlayerDataArray();
+        console.log(this.#playerDataArray);
+        this._displayPlayerStatistics();
+        this._reset();
+        boardTileContainers.forEach((tile) => {
+          tile.classList.remove("flipped");
+          tile.classList.remove("flip");
+        });
+        frontOfBoardTiles.forEach((tile) => {
+          tile.textContent = "";
+        });
+        keyboardButtons.forEach((button) => {
+          button.style.color = "black";
+          button.style.backgroundColor = "#d2d4d9";
+        });
+        this.#rowIndex = 0;
+        this.#answerArray = [];
+        this.#guessArray = [];
+        this.#theGameIsNotActive = false;
+        this._pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray();
+        this._storeTheAnswerInLocalStorage();
+        this._storeTheDataForPlayerStatisticsInLocalStorage();
+      }
     }, 1000);
   }
 
-  _storeTimeInLocalStorage() {
-    localStorage.setItem("time", JSON.stringify(this.#time));
-  }
-
-  _getTimeFromLocalStorage() {
-    let time = JSON.parse(localStorage.getItem("time"));
-    if (!time) return;
-    this.#time = time;
-  }
-
-  _resetTheWerdle() {
+  _reset() {
     localStorage.removeItem("answer");
-    localStorage.removeItem("playerboard");
+    localStorage.removeItem("playerBoard");
     localStorage.removeItem("keyboard");
     localStorage.removeItem("gamestate");
   }
@@ -230,7 +260,6 @@ class App {
 
     this.#rowIndex = rowData + 1;
     this.#playerBoardDataArray = boardData;
-    console.log(this.#playerBoardDataArray);
   }
 
   _createNewTileObjectsAndPushThemIntoTheBoardDataArray() {
@@ -297,14 +326,20 @@ class App {
     this.#keyboardButtonDataArray.splice(28);
   }
 
-  _getDataForPlayersStatisticsFromLocalStorage() {
-    this.#playerData = JSON.parse(localStorage.getItem("playerStatistics"));
+  _getDataForPlayerStatisticsFromLocalStorage() {
+    let playerData = JSON.parse(localStorage.getItem("playerStatistics"));
+    if (!playerData) {
+      this.#thereIsDataForPlayerStatistics = false;
+      return;
+    }
+    this.#thereIsDataForPlayerStatistics = true;
+    this.#playerDataArray = playerData;
   }
 
-  _checkIfThereIsDataForPlayerStatistics() {
-    if (!this.#playerData) this.#thereIsDataForPlayerStatistics = false;
-    if (this.#playerData) this.#thereIsDataForPlayerStatistics = true;
-  }
+  // _checkIfThereIsDataForPlayerStatistics() {
+  //   if (!this.#playerData) this.#thereIsDataForPlayerStatistics = false;
+  //   if (this.#playerData) this.#thereIsDataForPlayerStatistics = true;
+  // }
 
   _setDataForPlayerStatisticsToZero() {
     this.#playerDataArray = [0, 0, 0, 0, 0];
@@ -316,7 +351,6 @@ class App {
   }
 
   _updateDataForPlayerStatistics() {
-    this.#playerDataArray = this.#playerData;
     [
       this.#numberOfGamesPlayed,
       this.#numberOfGamesWon,
