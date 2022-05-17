@@ -154,7 +154,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date().setHours(23, 59, 40, 0);
+    this.#now = new Date();
   }
 
   _calculateTimeUntileMidnight() {
@@ -173,7 +173,9 @@ class App {
       let textMinute = Math.floor((this.#timeUntilMidnight % hour) / minute);
       let textSecond = Math.floor((this.#timeUntilMidnight % minute) / second);
 
-      document.querySelector(".time").textContent = `${this._makeNumbeTwoDigits(
+      document.querySelector(
+        ".statistics-modal__time"
+      ).textContent = `${this._makeNumbeTwoDigits(
         textHour
       )}:${this._makeNumbeTwoDigits(textMinute)}:${this._makeNumbeTwoDigits(
         textSecond

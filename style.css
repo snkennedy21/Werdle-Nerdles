@@ -6,6 +6,7 @@
 
 :root {
   --color-green: #68a868;
+  --color-green-shade: #6fb26f;
   --color-yellow: #d0b363;
 }
 
@@ -537,6 +538,60 @@ input:checked + .slider:before {
 
 .statistics-modal__stat-description {
   font-size: 1.2rem;
+}
+
+.statistics-modal__share-and-timer-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statistics-modal__timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  border-right: 1px solid black;
+  padding: 1rem 4rem 0 0;
+}
+
+.statistics-modal__next-werdle {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.statistics-modal__time {
+  font-size: 3.6rem;
+  letter-spacing: 0.2rem;
+}
+
+.statistics-modal__button-container {
+  margin: 0 0 0 4rem;
+}
+
+.statistics-modal__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--color-green);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+  padding: 1.5rem 4rem;
+}
+
+.statistics-modal__button:hover {
+  cursor: pointer;
+  background-color: var(--color-green-shade);
+}
+
+.statistics-modal__button__icon {
+  width: 2rem;
+  height: 2rem;
 }
 
 .invisible {
