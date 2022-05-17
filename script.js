@@ -99,9 +99,8 @@ class App {
   #time = 86400;
 
   constructor() {
-    setInterval(() => {
-      this._countdown();
-    }, 1000);
+    this._getTimeFromLocalStorage();
+    this._countdown();
     this._getTheDataForTheGameStateFromLocalStorage();
     this._getTheAnswerFromLocalStorage();
     this._checkIfThereIsCurrentlyAnAnswerInTheAnswerArray();
@@ -146,28 +145,41 @@ class App {
     );
   }
 
-  _makeMeTwoDigits(n) {
+  _makeNumbeTwoDigits(n) {
     return (n < 10 ? "0" : "") + n;
   }
 
   _countdown() {
-    this.#time = this.#time - 1;
-    console.log(this.#time);
-    let second = 1;
-    let minute = second * 60;
-    let hour = minute * 60;
-    let day = hour * 24;
+    setInterval(() => {
+      this.#time = this.#time - 1;
+      console.log(this.#time);
+      let second = 1;
+      let minute = second * 60;
+      let hour = minute * 60;
+      let day = hour * 24;
 
-    let textHour = Math.floor((this.#time % day) / hour);
-    let textMinute = Math.floor((this.#time % hour) / minute);
-    let textSecond = Math.floor((this.#time % minute) / second);
+      let textHour = Math.floor((this.#time % day) / hour);
+      let textMinute = Math.floor((this.#time % hour) / minute);
+      let textSecond = Math.floor((this.#time % minute) / second);
 
-    document.querySelector(".hours").textContent =
-      this._makeMeTwoDigits(textHour);
-    document.querySelector(".minutes").textContent =
-      this._makeMeTwoDigits(textMinute);
-    document.querySelector(".seconds").textContent =
-      this._makeMeTwoDigits(textSecond);
+      document.querySelector(".time").textContent = `${this._makeNumbeTwoDigits(
+        textHour
+      )}:${this._makeNumbeTwoDigits(textMinute)}:${this._makeNumbeTwoDigits(
+        textSecond
+      )}`;
+
+      this._storeTimeInLocalStorage();
+    }, 1000);
+  }
+
+  _storeTimeInLocalStorage() {
+    localStorage.setItem("time", JSON.stringify(this.#time));
+  }
+
+  _getTimeFromLocalStorage() {
+    let time = JSON.parse(localStorage.getItem("time"));
+    if (!time) return;
+    this.#time = time;
   }
 
   _resetTheWerdle() {
