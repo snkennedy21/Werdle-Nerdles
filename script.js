@@ -48,6 +48,9 @@ const currentStreak = document.querySelector(
   ".statistics-modal__current-streak"
 );
 const maxStreak = document.querySelector(".statistics-modal__max-streak");
+const guessDistributionBars = document.querySelectorAll(
+  ".statistics-modal__guess-distribution__bar"
+);
 
 class KeyboardButtonObject {
   constructor(backgroundColor, color) {
@@ -96,12 +99,21 @@ class App {
   #thereIsNoAnAnswerInTheAnswerArray;
   #playerData;
   #thereIsDataForPlayerStatistics;
+  #thereISDataForPlayerScoreStatistics;
   #upcomingMidnight;
   #now;
   #timeUntilMidnight;
+  #numberOfGamesWithScoreOf1;
+  #numberOfGamesWithScoreOf2;
+  #numberOfGamesWithScoreOf3;
+  #numberOfGamesWithScoreOf4;
+  #numberOfGamesWithScoreOf5;
+  #numberOfGamesWithScoreOf6;
+  #playerScoresDataArray;
 
   constructor() {
     // this._getDateAndTimeFromLocalStorage();
+    console.log();
     this._setDateAndTime();
     this._countdown();
     this._getTheDataForTheGameStateFromLocalStorage();
@@ -119,13 +131,22 @@ class App {
     this._getTheKeyboardDataFromLocalStorage();
     this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
     this._removeOldKeyboardButtonObjectsFromTheEndOfTheKeyboardButtonDataArray();
+
     this._getDataForPlayerStatisticsFromLocalStorage();
     if (!this.#thereIsDataForPlayerStatistics)
       this._setDataForPlayerStatisticsToZero();
     if (this.#thereIsDataForPlayerStatistics)
       this._updateDataForPlayerStatistics();
+
+    this._getDataForPlayerScoreStatisticsFromLocalStorage();
+    if (!this.#thereISDataForPlayerScoreStatistics)
+      this._setDataForPlayerScoreStatisticsToZero();
+    if (this.#thereISDataForPlayerScoreStatistics)
+      this._updateDataForPlayerScoreStatistics();
+
     this._setTheColorsForTheKeyboardButtons();
     this._displayPlayerStatistics();
+    this._displayPlayerScoreStatistics();
     this._buildArrayOfAllKeyboardValues();
 
     keyboard.addEventListener("click", this._playTheGame.bind(this));
@@ -147,6 +168,10 @@ class App {
     );
   }
 
+  /* ***********
+  Trial Features
+  *********** */
+
   _makeNumbeTwoDigits(n) {
     return (n < 10 ? "0" : "") + n;
   }
@@ -154,7 +179,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date();
+    this.#now = new Date().setHours(23, 59, 50, 0);
   }
 
   _calculateTimeUntileMidnight() {
@@ -189,7 +214,6 @@ class App {
         this._calculateTimeUntileMidnight();
         if (!this.#theGameIsNotActive) this.#currentStreak = 0;
         this._updateValuesInThePlayerDataArray();
-        console.log(this.#playerDataArray);
         this._displayPlayerStatistics();
         this._reset();
         boardTileContainers.forEach((tile) => {
@@ -219,6 +243,64 @@ class App {
     localStorage.removeItem("playerBoard");
     localStorage.removeItem("keyboard");
     localStorage.removeItem("gamestate");
+  }
+
+  _setTheScoreForTheCurrentRound() {
+    if (this.#playerGuessMatchesTheAnswer)
+      this.#scoreForCurrentRound = this.#rowIndex + 1;
+  }
+
+  _increaseNumberOfGamesForASpecificScore() {
+    console.log(this.#playerScoresDataArray);
+    this.#playerScoresDataArray.forEach((el, i) => {
+      if (i === this.#rowIndex) {
+        el++;
+        this.#playerScoresDataArray.splice(i, 1, el);
+        guessDistributionBars[i].style.backgroundColor = "#68a868";
+      }
+    });
+    console.log(this.#playerScoresDataArray);
+  }
+
+  _setDataForPlayerScoreStatisticsToZero() {
+    this.#playerScoresDataArray = [0, 0, 0, 0, 0, 0];
+    this.#numberOfGamesWithScoreOf1 = 0;
+    this.#numberOfGamesWithScoreOf2 = 0;
+    this.#numberOfGamesWithScoreOf3 = 0;
+    this.#numberOfGamesWithScoreOf4 = 0;
+    this.#numberOfGamesWithScoreOf5 = 0;
+    this.#numberOfGamesWithScoreOf6 = 0;
+  }
+
+  _updateDataForPlayerScoreStatistics() {
+    [
+      this.#numberOfGamesWithScoreOf1,
+      this.#numberOfGamesWithScoreOf2,
+      this.#numberOfGamesWithScoreOf3,
+      this.#numberOfGamesWithScoreOf4,
+      this.#numberOfGamesWithScoreOf5,
+      this.#numberOfGamesWithScoreOf6,
+    ] = this.#playerScoresDataArray;
+  }
+
+  _updateValuesInThePlayerScoresDataArray() {
+    this.#playerScoresDataArray = [
+      this.#numberOfGamesWithScoreOf1,
+      this.#numberOfGamesWithScoreOf2,
+      this.#numberOfGamesWithScoreOf3,
+      this.#numberOfGamesWithScoreOf4,
+      this.#numberOfGamesWithScoreOf5,
+      this.#numberOfGamesWithScoreOf6,
+    ];
+  }
+
+  _setDataForPlayerStatisticsToZero() {
+    this.#playerDataArray = [0, 0, 0, 0, 0];
+    this.#numberOfGamesPlayed = 0;
+    this.#numberOfGamesWon = 0;
+    this.#percentageOfGamesWon = 0;
+    this.#currentStreak = 0;
+    this.#maxStreak = 0;
   }
 
   /* *********************************************************************************
@@ -338,18 +420,21 @@ class App {
     this.#playerDataArray = playerData;
   }
 
-  // _checkIfThereIsDataForPlayerStatistics() {
-  //   if (!this.#playerData) this.#thereIsDataForPlayerStatistics = false;
-  //   if (this.#playerData) this.#thereIsDataForPlayerStatistics = true;
-  // }
+  _getDataForPlayerScoreStatisticsFromLocalStorage() {
+    let playerScoreData = JSON.parse(localStorage.getItem("playerScoreData"));
+    if (!playerScoreData) {
+      this.#thereISDataForPlayerScoreStatistics = false;
+      return;
+    }
+    this.#thereISDataForPlayerScoreStatistics = true;
+    this.#playerScoresDataArray = playerScoreData;
+  }
 
-  _setDataForPlayerStatisticsToZero() {
-    this.#playerDataArray = [0, 0, 0, 0, 0];
-    this.#numberOfGamesPlayed = 0;
-    this.#numberOfGamesWon = 0;
-    this.#percentageOfGamesWon = 0;
-    this.#currentStreak = 0;
-    this.#maxStreak = 0;
+  _storeTheDataForPlayerScoreStatisticsInLocalStorage() {
+    localStorage.setItem(
+      "playerScoreData",
+      JSON.stringify(this.#playerScoresDataArray)
+    );
   }
 
   _updateDataForPlayerStatistics() {
@@ -377,6 +462,15 @@ class App {
     percentageOfGamesWon.textContent = this.#percentageOfGamesWon;
     currentStreak.textContent = this.#currentStreak;
     maxStreak.textContent = this.#maxStreak;
+  }
+
+  _displayPlayerScoreStatistics() {
+    let guessDistributionBarNumbers = document.querySelectorAll(
+      ".statistics-modal__guess-distribution__bar__number"
+    );
+    guessDistributionBarNumbers.forEach((el, i) => {
+      el.textContent = this.#playerScoresDataArray[i];
+    });
   }
 
   _buildArrayOfAllKeyboardValues() {
@@ -430,9 +524,12 @@ class App {
             this._calculateThePercentageOfGamesWon();
             this._updateValuesInThePlayerDataArray();
             this._setTheScoreForTheCurrentRound();
+            this._increaseNumberOfGamesForASpecificScore();
             this._displayPlayerStatistics();
+            this._displayPlayerScoreStatistics();
             this.#theGameIsNotActive = true;
             this._storeTheDataForPlayerStatisticsInLocalStorage();
+            this._storeTheDataForPlayerScoreStatisticsInLocalStorage();
           }
           if (!this.#playerGuessMatchesTheAnswer) {
             this._checkIfPlayerIsOnFinalRow();
@@ -449,7 +546,6 @@ class App {
             this._moveToTheNextRowOfPlay();
             this._resetTheGuessArrayToEmpty();
           }
-          console.log(this.#theGameIsNotActive);
           this._storeTheDataForGameStateInLocalStorage();
         }
       }
@@ -603,7 +699,6 @@ class App {
   }
 
   _storeTheKeyboardDataInLocalStorage() {
-    console.log(this.#keyboardButtonDataArray);
     localStorage.setItem(
       "keyboard",
       JSON.stringify(this.#keyboardButtonDataArray)
@@ -658,12 +753,6 @@ class App {
         successMessage.classList.add("hidden");
       }, 1000);
     }, 2300);
-  }
-
-  _setTheScoreForTheCurrentRound() {
-    if (this.#playerGuessMatchesTheAnswer)
-      this.#scoreForCurrentRound = this.#rowIndex + 1;
-    if (!this.#playerGuessMatchesTheAnswer) this.#scoreForCurrentRound = 6;
   }
 
   _checkIfPlayerIsOnFinalRow() {
@@ -1329,7 +1418,6 @@ const acceptableWordList = [
   "DADDY",
   "QUASI",
   "ARISE",
-  "DONT",
   "REPOS",
   "AGING",
   "VALET",
