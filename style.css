@@ -597,11 +597,11 @@ input:checked + .slider:before {
   letter-spacing: 0.2rem;
 }
 
-.statistics-modal__button-container {
+.statistics-modal__share-button-container {
   margin: 0 0 0 4rem;
 }
 
-.statistics-modal__button {
+.statistics-modal__share-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -615,14 +615,19 @@ input:checked + .slider:before {
   padding: 1.5rem 4rem;
 }
 
-.statistics-modal__button:hover {
+.statistics-modal__share-button:hover {
   cursor: pointer;
   background-color: var(--color-green-shade);
 }
 
-.statistics-modal__button__icon {
+.statistics-modal__share-button__icon {
   width: 2.4rem;
   height: 2.4rem;
+}
+
+.statistics-modal__share {
+  height: 200px;
+  width: 500px;
 }
 
 .invisible {

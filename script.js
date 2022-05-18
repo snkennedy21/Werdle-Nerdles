@@ -54,6 +54,9 @@ const guessDistributionBars = document.querySelectorAll(
 const guessDistributionBarNumbers = document.querySelectorAll(
   ".statistics-modal__guess-distribution__bar__number"
 );
+const statisticsModalShareButton = document.querySelector(
+  ".statistics-modal__share-button"
+);
 
 class KeyboardButtonObject {
   constructor(backgroundColor, color) {
@@ -113,10 +116,9 @@ class App {
   #numberOfGamesWithScoreOf5;
   #numberOfGamesWithScoreOf6;
   #playerScoresDataArray;
+  #werdleNumber;
 
   constructor() {
-    // this._getDateAndTimeFromLocalStorage();
-    console.log();
     this._setDateAndTime();
     this._countdown();
     this._getTheDataForTheGameStateFromLocalStorage();
@@ -140,6 +142,7 @@ class App {
       this._setDataForPlayerStatisticsToZero();
     if (this.#thereIsDataForPlayerStatistics)
       this._updateDataForPlayerStatistics();
+    console.log(this.#playerDataArray);
 
     this._getDataForPlayerScoreStatisticsFromLocalStorage();
     if (!this.#thereISDataForPlayerScoreStatistics)
@@ -170,11 +173,55 @@ class App {
       "click",
       this._toggleStatisticsModal.bind(this)
     );
+    statisticsModalShareButton.addEventListener(
+      "click",
+      this._buildBlocks.bind(this)
+    );
   }
 
   /* ***********
   Trial Features
   *********** */
+
+  _buildBlocks() {
+    let text = `Nerdle Werdle ${this.#werdleNumber} ${
+      this.#scoreForCurrentRound
+    }/6⬛⬛`;
+    let greenSquare = "🟩";
+    let yellowSquare = "🟨";
+    let greySquare = "⬜";
+    let condition = (this.#rowIndex + 1) * 5 - 1;
+
+    for (let i = 0; i <= condition; i++) {
+      if (backOfBoardTiles[i].style.backgroundColor === "grey") {
+        text = text + greySquare;
+      }
+      if (backOfBoardTiles[i].style.backgroundColor === "rgb(104, 168, 104)") {
+        text = text + greenSquare;
+      }
+      if (backOfBoardTiles[i].style.backgroundColor === "rgb(208, 179, 99)") {
+        text = text + yellowSquare;
+      }
+      if (i === 4 || i === 9 || i === 14 || i === 19 || i == 24) text += "⬛";
+    }
+    let copyhelper = document.createElement("textarea");
+    copyhelper.className = "copyhelper";
+    document.body.appendChild(copyhelper);
+    copyhelper.value = text;
+    copyhelper.value = copyhelper.value
+      .replace("⬛", "\n")
+      .replace("⬛", "\n")
+      .replace("⬛", "\n")
+      .replace("⬛", "\n")
+      .replace("⬛", "\n")
+      .replace("⬛", "\n")
+      .replace("⬛", "\n");
+    copyhelper.select();
+    document.execCommand("copy");
+    document.body.removeChild(copyhelper);
+  }
+
+  _copyBlocks() {}
 
   _updatePlayerScoreStatisticsChart() {
     let number1 = 0;
@@ -184,20 +231,19 @@ class App {
     let number5 = 0;
     let number6 = 0;
     let numberArray = [number1, number2, number3, number4, number5, number6];
-    console.log(this.#playerScoresDataArray);
+
     guessDistributionBarNumbers.forEach((el, i) => {
       let number = Number(el.textContent);
       this.#playerScoresDataArray.forEach((score) => {
         if (number > score) numberArray[i]++;
       });
     });
-    console.log(numberArray);
     numberArray.forEach((number, i) => {
-      if (number === 5) guessDistributionBars[i].style.width = "100%";
-      if (number === 4) guessDistributionBars[i].style.width = "80%";
-      if (number === 3) guessDistributionBars[i].style.width = "60%";
-      if (number === 2) guessDistributionBars[i].style.width = "40%";
-      if (number === 1) guessDistributionBars[i].style.width = "20%";
+      if (number === 5) guessDistributionBars[i].style.width = "90%";
+      if (number === 4) guessDistributionBars[i].style.width = "70%";
+      if (number === 3) guessDistributionBars[i].style.width = "50%";
+      if (number === 2) guessDistributionBars[i].style.width = "30%";
+      if (number === 1) guessDistributionBars[i].style.width = "10%";
       if (number === 0) guessDistributionBars[i].style.width = "5%";
     });
   }
@@ -209,7 +255,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date().setHours(23, 59, 50, 0);
+    this.#now = new Date().setHours(23, 59, 58, 0);
   }
 
   _calculateTimeUntileMidnight() {
@@ -243,7 +289,9 @@ class App {
         this.#upcomingMidnight.setHours(24, 0, 0, 0);
         this._calculateTimeUntileMidnight();
         if (!this.#theGameIsNotActive) this.#currentStreak = 0;
+        this.#werdleNumber++;
         this._updateValuesInThePlayerDataArray();
+        console.log(this.#playerDataArray);
         this._displayPlayerStatistics();
         this._reset();
         boardTileContainers.forEach((tile) => {
@@ -281,7 +329,6 @@ class App {
   }
 
   _increaseNumberOfGamesForASpecificScore() {
-    console.log(this.#playerScoresDataArray);
     this.#playerScoresDataArray.forEach((el, i) => {
       if (i === this.#rowIndex) {
         el++;
@@ -289,7 +336,6 @@ class App {
         guessDistributionBars[i].style.backgroundColor = "#68a868";
       }
     });
-    console.log(this.#playerScoresDataArray);
   }
 
   _setDataForPlayerScoreStatisticsToZero() {
@@ -325,12 +371,13 @@ class App {
   }
 
   _setDataForPlayerStatisticsToZero() {
-    this.#playerDataArray = [0, 0, 0, 0, 0];
+    this.#playerDataArray = [0, 0, 0, 0, 0, 1];
     this.#numberOfGamesPlayed = 0;
     this.#numberOfGamesWon = 0;
     this.#percentageOfGamesWon = 0;
     this.#currentStreak = 0;
     this.#maxStreak = 0;
+    this.#werdleNumber = 1;
   }
 
   /* *********************************************************************************
@@ -448,6 +495,7 @@ class App {
     }
     this.#thereIsDataForPlayerStatistics = true;
     this.#playerDataArray = playerData;
+    console.log(this.#playerDataArray);
   }
 
   _getDataForPlayerScoreStatisticsFromLocalStorage() {
@@ -474,6 +522,7 @@ class App {
       this.#percentageOfGamesWon,
       this.#currentStreak,
       this.#maxStreak,
+      this.#werdleNumber,
     ] = this.#playerDataArray;
   }
 
@@ -556,6 +605,10 @@ class App {
             this._displayPlayerScoreStatistics();
             this._updatePlayerScoreStatisticsChart();
             this.#theGameIsNotActive = true;
+            setTimeout(() => {
+              this._toggleStatisticsModal();
+            }, 3500);
+            this._buildBlocks();
             this._storeTheDataForPlayerStatisticsInLocalStorage();
             this._storeTheDataForPlayerScoreStatisticsInLocalStorage();
           }
@@ -570,6 +623,10 @@ class App {
               this._displayPlayerStatistics();
               this._updatePlayerScoreStatisticsChart();
               this.#theGameIsNotActive = true;
+              setTimeout(() => {
+                this._toggleStatisticsModal();
+              }, 3500);
+              this._buildBlocks();
               this._storeTheDataForPlayerStatisticsInLocalStorage();
             }
             this._moveToTheNextRowOfPlay();
@@ -761,6 +818,7 @@ class App {
       this.#percentageOfGamesWon,
       this.#currentStreak,
       this.#maxStreak,
+      this.#werdleNumber,
     ];
   }
 
@@ -792,6 +850,7 @@ class App {
   }
 
   _storeTheDataForPlayerStatisticsInLocalStorage() {
+    console.log(this.#playerDataArray);
     localStorage.setItem(
       "playerStatistics",
       JSON.stringify(this.#playerDataArray)
