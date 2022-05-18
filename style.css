@@ -137,6 +137,7 @@ body {
   align-items: center;
   font-size: 3rem;
   border: 2px solid #d2d4d9;
+  /* border: 2px solid #929397; */
 }
 
 .back {
@@ -242,6 +243,20 @@ body {
 
   100% {
     transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
   }
 }
 

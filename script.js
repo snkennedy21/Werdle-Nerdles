@@ -80,6 +80,7 @@ class App {
   #guessArray = [];
   #answerArray = [];
   #rowIndex = 0;
+  #tileIndex = 0;
   #pressedKey;
   #guessArrayIsFull = false;
   #playerGuessMatchesTheAnswer = false;
@@ -126,7 +127,6 @@ class App {
     this._checkIfThereIsCurrentlyAnAnswerInTheAnswerArray();
     if (this.#thereIsNoAnAnswerInTheAnswerArray)
       this._pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray();
-    console.log(this.#answerArray);
     this._storeTheAnswerInLocalStorage();
     this._getTheBoardDataFromLocalStorage();
     this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
@@ -142,7 +142,6 @@ class App {
       this._setDataForPlayerStatisticsToZero();
     if (this.#thereIsDataForPlayerStatistics)
       this._updateDataForPlayerStatistics();
-    console.log(this.#playerDataArray);
 
     this._getDataForPlayerScoreStatisticsFromLocalStorage();
     if (!this.#thereISDataForPlayerScoreStatistics)
@@ -182,6 +181,24 @@ class App {
   /* ***********
   Trial Features
   *********** */
+
+  _animateTile() {
+    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((el, i) => {
+      if (i + 1 === this.#tileIndex) {
+        el.style.animation = "pulse 0.1s linear";
+        el.style.borderColor = "#929397";
+      }
+    });
+  }
+
+  _removeTileBorderColor() {
+    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((el, i) => {
+      if (i === this.#tileIndex) {
+        el.style.borderColor = "#d2d4d9";
+      }
+      el.style.animation = "";
+    });
+  }
 
   _buildBlocks() {
     let text = `Nerdle Werdle ${this.#werdleNumber} ${
@@ -291,7 +308,6 @@ class App {
         if (!this.#theGameIsNotActive) this.#currentStreak = 0;
         this.#werdleNumber++;
         this._updateValuesInThePlayerDataArray();
-        console.log(this.#playerDataArray);
         this._displayPlayerStatistics();
         this._reset();
         boardTileContainers.forEach((tile) => {
@@ -495,7 +511,6 @@ class App {
     }
     this.#thereIsDataForPlayerStatistics = true;
     this.#playerDataArray = playerData;
-    console.log(this.#playerDataArray);
   }
 
   _getDataForPlayerScoreStatisticsFromLocalStorage() {
@@ -640,6 +655,7 @@ class App {
     if (this.#pressedKey === "Backspace") {
       this._removeTheLastLetterFromTheGuessArray();
       this._setTheTextContentForTilesInCurrentRowOfPlay();
+      this._removeTileBorderColor();
       // this._checkIfGuessArrayIsFull();
     }
 
@@ -650,6 +666,7 @@ class App {
       this._checkIfGuessArrayIsFull();
       if (this.#guessArrayIsFull) this._stopAddingLettersToTheGuessArray();
       this._setTheTextContentForTilesInCurrentRowOfPlay();
+      this._animateTile();
     }
   }
 
@@ -850,7 +867,6 @@ class App {
   }
 
   _storeTheDataForPlayerStatisticsInLocalStorage() {
-    console.log(this.#playerDataArray);
     localStorage.setItem(
       "playerStatistics",
       JSON.stringify(this.#playerDataArray)
@@ -863,6 +879,7 @@ class App {
 
   _moveToTheNextRowOfPlay() {
     this.#rowIndex++;
+    this.#tileIndex = 0;
     if (this.#rowIndex > 6) this.#rowIndex = 6;
   }
 
@@ -872,10 +889,16 @@ class App {
 
   _removeTheLastLetterFromTheGuessArray() {
     this.#guessArray.pop();
+    this.#tileIndex--;
+    if (this.#tileIndex < 0) this.#tileIndex = 0;
+    console.log(this.#tileIndex);
   }
 
   _addTheLetterOfThePressedKeyToGuessArray() {
     this.#guessArray.push(this.#pressedKey);
+    this.#tileIndex++;
+    if (this.#tileIndex > 5) this.#tileIndex = 5;
+    console.log(this.#tileIndex);
   }
 
   _stopAddingLettersToTheGuessArray() {
