@@ -51,6 +51,9 @@ const maxStreak = document.querySelector(".statistics-modal__max-streak");
 const guessDistributionBars = document.querySelectorAll(
   ".statistics-modal__guess-distribution__bar"
 );
+const guessDistributionBarNumbers = document.querySelectorAll(
+  ".statistics-modal__guess-distribution__bar__number"
+);
 
 class KeyboardButtonObject {
   constructor(backgroundColor, color) {
@@ -148,6 +151,7 @@ class App {
     this._displayPlayerStatistics();
     this._displayPlayerScoreStatistics();
     this._buildArrayOfAllKeyboardValues();
+    this._updatePlayerScoreStatisticsChart();
 
     keyboard.addEventListener("click", this._playTheGame.bind(this));
     window.addEventListener("keydown", this._playTheGame.bind(this));
@@ -171,6 +175,32 @@ class App {
   /* ***********
   Trial Features
   *********** */
+
+  _updatePlayerScoreStatisticsChart() {
+    let number1 = 0;
+    let number2 = 0;
+    let number3 = 0;
+    let number4 = 0;
+    let number5 = 0;
+    let number6 = 0;
+    let numberArray = [number1, number2, number3, number4, number5, number6];
+    console.log(this.#playerScoresDataArray);
+    guessDistributionBarNumbers.forEach((el, i) => {
+      let number = Number(el.textContent);
+      this.#playerScoresDataArray.forEach((score) => {
+        if (number > score) numberArray[i]++;
+      });
+    });
+    console.log(numberArray);
+    numberArray.forEach((number, i) => {
+      if (number === 5) guessDistributionBars[i].style.width = "100%";
+      if (number === 4) guessDistributionBars[i].style.width = "80%";
+      if (number === 3) guessDistributionBars[i].style.width = "60%";
+      if (number === 2) guessDistributionBars[i].style.width = "40%";
+      if (number === 1) guessDistributionBars[i].style.width = "20%";
+      if (number === 0) guessDistributionBars[i].style.width = "5%";
+    });
+  }
 
   _makeNumbeTwoDigits(n) {
     return (n < 10 ? "0" : "") + n;
@@ -465,9 +495,6 @@ class App {
   }
 
   _displayPlayerScoreStatistics() {
-    let guessDistributionBarNumbers = document.querySelectorAll(
-      ".statistics-modal__guess-distribution__bar__number"
-    );
     guessDistributionBarNumbers.forEach((el, i) => {
       el.textContent = this.#playerScoresDataArray[i];
     });
@@ -527,6 +554,7 @@ class App {
             this._increaseNumberOfGamesForASpecificScore();
             this._displayPlayerStatistics();
             this._displayPlayerScoreStatistics();
+            this._updatePlayerScoreStatisticsChart();
             this.#theGameIsNotActive = true;
             this._storeTheDataForPlayerStatisticsInLocalStorage();
             this._storeTheDataForPlayerScoreStatisticsInLocalStorage();
@@ -540,6 +568,7 @@ class App {
               this._updateValuesInThePlayerDataArray();
               this._setTheScoreForTheCurrentRound();
               this._displayPlayerStatistics();
+              this._updatePlayerScoreStatisticsChart();
               this.#theGameIsNotActive = true;
               this._storeTheDataForPlayerStatisticsInLocalStorage();
             }
@@ -847,12 +876,13 @@ class App {
     });
   }
 
-  _reset() {
+  _globalReset() {
     localStorage.removeItem("playerStatistics");
     localStorage.removeItem("playerBoard");
     localStorage.removeItem("keyboard");
     localStorage.removeItem("answer");
     localStorage.removeItem("gamestate");
+    localStorage.removeItem("playerScoreData");
   }
 }
 
