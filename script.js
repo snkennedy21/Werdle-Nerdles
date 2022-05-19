@@ -62,8 +62,9 @@ const darkThemeCheckbox = document.querySelector(".dark-theme-checkbox");
 let secondaryColor = "#131313";
 let lightGrey = "#d2d4d9";
 let darkGrey = "#929397";
-let correctColor = "#68a868";
-let wrongColor = "#d0b363";
+let correctPlaceColor = "#68a868";
+let wrongPlaceColor = "#d0b363";
+let wrongLetterColor = "#808080";
 
 class KeyboardButtonObject {
   constructor(backgroundColor, color) {
@@ -127,6 +128,7 @@ class App {
   #werdleNumber;
 
   constructor() {
+    console.log(this.#rowIndex);
     this._setDateAndTime();
     this._countdown();
     this._getTheDataForTheGameStateFromLocalStorage();
@@ -210,21 +212,35 @@ class App {
       secondaryColor = "#ffffff";
       lightGrey = "#3f3f3f";
       darkGrey = "#67686b";
+      wrongLetterColor = "rgb(60, 60, 60)";
       keyboardButtons.forEach((button) => {
-        console.log(button.style.backgroundColor);
-        if (
-          button.style.backgroundColor !== "rgb(208, 179, 99)" &&
-          button.style.backgroundColor !== "rgb(104, 168, 104)" &&
-          button.style.backgroundColor !== "grey"
-        ) {
-          button.style.backgroundColor = lightGrey;
-          button.style.color = secondaryColor;
+        button.style.color = "#ffffff";
+        if (button.style.backgroundColor === "rgb(208, 179, 99)")
+          button.style.backgroundColor = "rgb(208, 179, 99)";
+        if (button.style.backgroundColor === "rgb(104, 168, 104)")
+          button.style.backgroundColor = "rgb(104, 168, 104)";
+        if (button.style.backgroundColor === "rgb(128, 128, 128)")
+          button.style.backgroundColor = "rgb(60, 60, 60)";
+        if (button.style.backgroundColor === "") {
+          button.style.backgroundColor = "rgb(116, 118, 120)";
+        }
+        if (button.style.backgroundColor === "rgb(210, 212, 217)") {
+          button.style.backgroundColor = "rgb(116, 118, 120)";
         }
       });
       frontOfBoardTiles.forEach((tile) => {
         tile.style.borderColor = lightGrey;
       });
+      backOfBoardTiles.forEach((tile) => {
+        if (tile.style.backgroundColor === "rgb(208, 179, 99)")
+          tile.style.backgroundColor = "rgb(208, 179, 99)";
+        if (tile.style.backgroundColor === "rgb(104, 168, 104)")
+          tile.style.backgroundColor = "rgb(104, 168, 104)";
+        if (tile.style.backgroundColor === "rgb(128, 128, 128)")
+          tile.style.backgroundColor = "rgb(60, 60, 60)";
+      });
     }
+
     if (!darkThemeCheckbox.checked) {
       document.documentElement.style.setProperty("--primary", "#ffffff");
       document.documentElement.style.setProperty("--secondary", "#131313");
@@ -241,20 +257,43 @@ class App {
       secondaryColor = "#131313";
       lightGrey = "#d2d4d9";
       darkGrey = "#929397";
+      wrongLetterColor = "#808080";
       keyboardButtons.forEach((button) => {
-        if (
-          button.style.backgroundColor !== "rgb(208, 179, 99)" &&
-          button.style.backgroundColor !== "rgb(104, 168, 104)" &&
-          button.style.backgroundColor !== "grey"
-        ) {
-          button.style.backgroundColor = lightGrey;
-          button.style.color = secondaryColor;
+        button.style.color = "#000000";
+        if (button.style.backgroundColor === "rgb(208, 179, 99)") {
+          button.style.backgroundColor = "rgb(208, 179, 99)";
+          button.style.color = "#ffffff";
         }
+        if (button.style.backgroundColor === "rgb(104, 168, 104)") {
+          button.style.backgroundColor = "rgb(104, 168, 104)";
+          button.style.color = "#ffffff";
+        }
+        if (button.style.backgroundColor === "rgb(60, 60, 60)") {
+          button.style.backgroundColor = "rgb(128, 128, 128)";
+          button.style.color = "#ffffff";
+        }
+        if (button.style.backgroundColor === "rgb(116, 118, 120)")
+          button.style.backgroundColor = "rgb(210, 212, 217)";
       });
       frontOfBoardTiles.forEach((tile) => {
         tile.style.borderColor = lightGrey;
       });
+      backOfBoardTiles.forEach((tile) => {
+        if (tile.style.backgroundColor === "rgb(208, 179, 99)")
+          tile.style.backgroundColor = "rgb(208, 179, 99)";
+        if (tile.style.backgroundColor === "rgb(104, 168, 104)")
+          tile.style.backgroundColor = "rgb(104, 168, 104)";
+        if (tile.style.backgroundColor === "rgb(60, 60, 60)")
+          tile.style.backgroundColor = "rgb(128, 128, 128)";
+      });
     }
+
+    this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
+    this._removeOldKeyboardButtonObjectsFromTheBeginningOfTheKeyboardButtonDataArray();
+    this._storeTheKeyboardDataInLocalStorage();
+    this.#playerBoardDataArray = [];
+    this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
+    this._storeTheBoardDataInLocalStorage();
   }
 
   _animateTile() {
@@ -285,7 +324,10 @@ class App {
     let condition = (this.#rowIndex + 1) * 5 - 1;
 
     for (let i = 0; i <= condition; i++) {
-      if (backOfBoardTiles[i].style.backgroundColor === "grey") {
+      if (
+        backOfBoardTiles[i].style.backgroundColor === "rgb(128, 128, 128)" ||
+        backOfBoardTiles[i].style.backgroundColor === "rgb(60, 60, 60)"
+      ) {
         text = text + greySquare;
       }
       if (backOfBoardTiles[i].style.backgroundColor === "rgb(104, 168, 104)") {
@@ -513,12 +555,14 @@ class App {
 
     if (!boardData) return;
 
-    this.#rowIndex = rowData + 1;
+    this.#rowIndex = rowData;
     this.#playerBoardDataArray = boardData;
+    console.log(this.#rowIndex);
   }
 
   _createNewTileObjectsAndPushThemIntoTheBoardDataArray() {
     boardTileContainers.forEach((tile, i) => {
+      console.log(backOfBoardTiles[i].style.backgroundColor);
       let tileBackgroundColor = backOfBoardTiles[i].style.backgroundColor;
       let tileColor = backOfBoardTiles[i].style.color;
       let tileText = backOfBoardTiles[i].textContent;
@@ -726,6 +770,7 @@ class App {
             this._resetTheGuessArrayToEmpty();
           }
           this._storeTheDataForGameStateInLocalStorage();
+          this._storeTheBoardDataInLocalStorage();
         }
       }
     }
@@ -752,6 +797,7 @@ class App {
   These are all the methods called in the playGame method
   **************************************************** */
   _identifyCurrentRowOfPlay() {
+    console.log(this.#rowIndex);
     this.#currentRowOfPlay = allBoardRows[this.#rowIndex];
   }
 
@@ -834,10 +880,11 @@ class App {
   }
 
   _updateTheColorsForTheTilesAndKeyboardButtons() {
+    console.log(wrongLetterColor);
     this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
       // Update the tile colors based on guess
       if (tile.textContent !== this.#answerArray[i]) {
-        tile.style.backgroundColor = "grey";
+        tile.style.backgroundColor = wrongLetterColor;
         tile.style.color = "white";
       }
       if (this.#answerArray.includes(tile.textContent)) {
@@ -976,7 +1023,6 @@ class App {
     this.#guessArray.push(this.#pressedKey);
     this.#tileIndex++;
     if (this.#tileIndex > 5) this.#tileIndex = 5;
-    console.log(this.#tileIndex);
   }
 
   _stopAddingLettersToTheGuessArray() {

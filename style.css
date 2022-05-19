@@ -22,6 +22,7 @@ New Tile Grey: #3f3f3f
   --primary-transparent: #ffffff80;
   --grey-light: #d2d4d9;
   --grey-dark: #929397;
+  --pure-grey: #222222;
 }
 
 html {
@@ -184,7 +185,7 @@ body {
   height: 5.8rem;
   border: none;
   border-radius: 0.5rem;
-  background-color: var(--grey-light);
+  background-color: rgb(210, 212, 217);
   font-weight: 600;
   color: var(--secondary);
 }
