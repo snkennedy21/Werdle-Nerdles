@@ -59,8 +59,11 @@ const statisticsModalShareButton = document.querySelector(
 );
 const darkThemeCheckbox = document.querySelector(".dark-theme-checkbox");
 
+let secondaryColor = "#131313";
 let lightGrey = "#d2d4d9";
 let darkGrey = "#929397";
+let correctColor = "#68a868";
+let wrongColor = "#d0b363";
 
 class KeyboardButtonObject {
   constructor(backgroundColor, color) {
@@ -204,8 +207,23 @@ class App {
       );
       document.documentElement.style.setProperty("--grey-light", "#3f3f3f");
       document.documentElement.style.setProperty("--grey-dark", "#67686b");
+      secondaryColor = "#ffffff";
       lightGrey = "#3f3f3f";
       darkGrey = "#67686b";
+      keyboardButtons.forEach((button) => {
+        console.log(button.style.backgroundColor);
+        if (
+          button.style.backgroundColor !== "rgb(208, 179, 99)" &&
+          button.style.backgroundColor !== "rgb(104, 168, 104)" &&
+          button.style.backgroundColor !== "grey"
+        ) {
+          button.style.backgroundColor = lightGrey;
+          button.style.color = secondaryColor;
+        }
+      });
+      frontOfBoardTiles.forEach((tile) => {
+        tile.style.borderColor = lightGrey;
+      });
     }
     if (!darkThemeCheckbox.checked) {
       document.documentElement.style.setProperty("--primary", "#ffffff");
@@ -220,8 +238,22 @@ class App {
       );
       document.documentElement.style.setProperty("--grey-light", "#d2d4d9");
       document.documentElement.style.setProperty("--grey-dark", "#929397");
+      secondaryColor = "#131313";
       lightGrey = "#d2d4d9";
       darkGrey = "#929397";
+      keyboardButtons.forEach((button) => {
+        if (
+          button.style.backgroundColor !== "rgb(208, 179, 99)" &&
+          button.style.backgroundColor !== "rgb(104, 168, 104)" &&
+          button.style.backgroundColor !== "grey"
+        ) {
+          button.style.backgroundColor = lightGrey;
+          button.style.color = secondaryColor;
+        }
+      });
+      frontOfBoardTiles.forEach((tile) => {
+        tile.style.borderColor = lightGrey;
+      });
     }
   }
 
@@ -229,7 +261,7 @@ class App {
     this.#frontOfAllTilesInCurrentRowOfPlay.forEach((el, i) => {
       if (i + 1 === this.#tileIndex) {
         el.style.animation = "pulse 0.1s linear";
-        el.style.borderColor = "#929397";
+        el.style.borderColor = darkGrey;
       }
     });
   }
@@ -237,7 +269,7 @@ class App {
   _removeTileBorderColor() {
     this.#frontOfAllTilesInCurrentRowOfPlay.forEach((el, i) => {
       if (i === this.#tileIndex) {
-        el.style.borderColor = "#d2d4d9";
+        el.style.borderColor = lightGrey;
       }
       el.style.animation = "";
     });
@@ -315,7 +347,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date().setHours(23, 59, 30, 0);
+    this.#now = new Date().setHours(23, 50, 0, 0);
   }
 
   _calculateTimeUntileMidnight() {
@@ -370,7 +402,7 @@ class App {
     localStorage.removeItem("keyboard");
     localStorage.removeItem("gamestate");
     frontOfBoardTiles.forEach((tile) => {
-      tile.style.borderColor = "#d2d4d9";
+      tile.style.borderColor = lightGrey;
       tile.style.animation = "";
       tile.textContent = "";
     });
@@ -379,8 +411,8 @@ class App {
       tile.classList.remove("flip");
     });
     keyboardButtons.forEach((button) => {
-      button.style.color = "black";
-      button.style.backgroundColor = "#d2d4d9";
+      button.style.color = secondaryColor;
+      button.style.backgroundColor = lightGrey;
     });
     this.#tileIndex = 0;
   }
@@ -999,7 +1031,7 @@ class App {
 
   _resetKeyboard() {
     keyboardButtons.forEach((button) => {
-      button.style.backgroundColor = "#d2d4d9";
+      button.style.backgroundColor = lightGrey;
       button.style.color = "black";
     });
   }
