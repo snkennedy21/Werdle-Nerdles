@@ -272,7 +272,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date().setHours(23, 59, 58, 0);
+    this.#now = new Date().setHours(23, 59, 55, 0);
   }
 
   _calculateTimeUntileMidnight() {
@@ -310,17 +310,6 @@ class App {
         this._updateValuesInThePlayerDataArray();
         this._displayPlayerStatistics();
         this._reset();
-        boardTileContainers.forEach((tile) => {
-          tile.classList.remove("flipped");
-          tile.classList.remove("flip");
-        });
-        frontOfBoardTiles.forEach((tile) => {
-          tile.textContent = "";
-        });
-        keyboardButtons.forEach((button) => {
-          button.style.color = "black";
-          button.style.backgroundColor = "#d2d4d9";
-        });
         this.#rowIndex = 0;
         this.#answerArray = [];
         this.#guessArray = [];
@@ -337,6 +326,20 @@ class App {
     localStorage.removeItem("playerBoard");
     localStorage.removeItem("keyboard");
     localStorage.removeItem("gamestate");
+    frontOfBoardTiles.forEach((tile) => {
+      tile.style.borderColor = "#d2d4d9";
+      tile.style.animation = "";
+      tile.textContent = "";
+    });
+    boardTileContainers.forEach((tile) => {
+      tile.classList.remove("flipped");
+      tile.classList.remove("flip");
+    });
+    keyboardButtons.forEach((button) => {
+      button.style.color = "black";
+      button.style.backgroundColor = "#d2d4d9";
+    });
+    this.#tileIndex = 0;
   }
 
   _setTheScoreForTheCurrentRound() {
