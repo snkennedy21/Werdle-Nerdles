@@ -57,6 +57,10 @@ const guessDistributionBarNumbers = document.querySelectorAll(
 const statisticsModalShareButton = document.querySelector(
   ".statistics-modal__share-button"
 );
+const darkThemeCheckbox = document.querySelector(".dark-theme-checkbox");
+
+let lightGrey = "#d2d4d9";
+let darkGrey = "#929397";
 
 class KeyboardButtonObject {
   constructor(backgroundColor, color) {
@@ -176,11 +180,50 @@ class App {
       "click",
       this._buildBlocks.bind(this)
     );
+    darkThemeCheckbox.addEventListener(
+      "change",
+      this._toggleDarkTheme.bind(this)
+    );
   }
 
   /* ***********
   Trial Features
   *********** */
+
+  _toggleDarkTheme() {
+    if (darkThemeCheckbox.checked) {
+      document.documentElement.style.setProperty("--primary", "#131313");
+      document.documentElement.style.setProperty("--secondary", "#ffffff");
+      document.documentElement.style.setProperty(
+        "--primary-transparent",
+        "#00000080"
+      );
+      document.documentElement.style.setProperty(
+        "--secondary-shadow",
+        "#ffffff1f"
+      );
+      document.documentElement.style.setProperty("--grey-light", "#3f3f3f");
+      document.documentElement.style.setProperty("--grey-dark", "#67686b");
+      lightGrey = "#3f3f3f";
+      darkGrey = "#67686b";
+    }
+    if (!darkThemeCheckbox.checked) {
+      document.documentElement.style.setProperty("--primary", "#ffffff");
+      document.documentElement.style.setProperty("--secondary", "#131313");
+      document.documentElement.style.setProperty(
+        "--primary-transparent",
+        "#ffffff80"
+      );
+      document.documentElement.style.setProperty(
+        "--secondary-shadow",
+        "#0000001f"
+      );
+      document.documentElement.style.setProperty("--grey-light", "#d2d4d9");
+      document.documentElement.style.setProperty("--grey-dark", "#929397");
+      lightGrey = "#d2d4d9";
+      darkGrey = "#929397";
+    }
+  }
 
   _animateTile() {
     this.#frontOfAllTilesInCurrentRowOfPlay.forEach((el, i) => {
@@ -272,7 +315,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date().setHours(23, 59, 55, 0);
+    this.#now = new Date().setHours(23, 59, 30, 0);
   }
 
   _calculateTimeUntileMidnight() {
