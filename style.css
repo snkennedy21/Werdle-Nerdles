@@ -23,6 +23,8 @@ New Tile Grey: #3f3f3f
   --grey-light: #d2d4d9;
   --grey-dark: #929397;
   --pure-grey: #222222;
+
+  --money: #f6864e;
 }
 
 html {

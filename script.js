@@ -58,6 +58,10 @@ const statisticsModalShareButton = document.querySelector(
   ".statistics-modal__share-button"
 );
 const darkThemeCheckbox = document.querySelector(".dark-theme-checkbox");
+const highContrastModeCheckbox = document.querySelector(
+  ".high-contrast-mode-checkbox"
+);
+const hardModeCheckbox = document.querySelector(".hard-mode-checkbox");
 
 let secondaryColor = "#131313";
 let lightGrey = "#d2d4d9";
@@ -127,10 +131,15 @@ class App {
   #playerScoresDataArray;
   #werdleNumber;
   #darkThemeIsEnabled;
+  #highContrastModeIsEnabled;
+  #hardModeIsEnabled;
+  #hardModeLetterArray = [];
+  #guessContainsLettersFromHardModeArray;
 
   constructor() {
     this._setDateAndTime();
     this._countdown();
+    this._getLettersForHardModeFromLocalStorage();
     this._getTheDataForTheGameStateFromLocalStorage();
     this._getTheAnswerFromLocalStorage();
     this._checkIfThereIsCurrentlyAnAnswerInTheAnswerArray();
@@ -163,10 +172,26 @@ class App {
     this._displayPlayerScoreStatistics();
     this._buildArrayOfAllKeyboardValues();
     this._updatePlayerScoreStatisticsChart();
+
+    this._getHardModeInformationFromLocalStorage();
+    if (this.#hardModeIsEnabled) {
+      hardModeCheckbox.checked = true;
+    }
+    if (this.#hardModeIsEnabled && this.#rowIndex > 0)
+      this._disableHardModeSlider();
+    if (!this.#hardModeIsEnabled) hardModeCheckbox.checked = false;
+
     this._getTheInformationForDarkThemeFromLocalStorage();
     if (this.#darkThemeIsEnabled) darkThemeCheckbox.checked = true;
     if (!this.#darkThemeIsEnabled) darkThemeCheckbox.checked = false;
     this._toggleDarkTheme();
+    this._getTheInformationForHighContrastModeFromLocalStorage();
+    if (this.#highContrastModeIsEnabled)
+      highContrastModeCheckbox.checked = true;
+    if (!this.#highContrastModeIsEnabled)
+      highContrastModeCheckbox.checked = false;
+    this._toggleHighContrastMode();
+    console.log(this.#answerArray);
 
     keyboard.addEventListener("click", this._playTheGame.bind(this));
     window.addEventListener("keydown", this._playTheGame.bind(this));
@@ -193,11 +218,95 @@ class App {
       "change",
       this._toggleDarkTheme.bind(this)
     );
+    highContrastModeCheckbox.addEventListener(
+      "change",
+      this._toggleHighContrastMode.bind(this)
+    );
+    hardModeCheckbox.addEventListener(
+      "change",
+      this._toggleHardMode.bind(this)
+    );
   }
 
   /* ***********
   Trial Features
   *********** */
+
+  _getHardModeInformationFromLocalStorage() {
+    let hardModeInfo = JSON.parse(localStorage.getItem("hardModeInfo"));
+    if (!hardModeInfo) {
+      this.#hardModeIsEnabled = false;
+      return;
+    }
+    this.#hardModeIsEnabled = hardModeInfo;
+  }
+
+  _storeHardModeInformationInLocalStorage() {
+    localStorage.setItem(
+      "hardModeInfo",
+      JSON.stringify(this.#hardModeIsEnabled)
+    );
+  }
+
+  _checkIfGuessContainsLettersFromHardModeArray() {
+    if (
+      this.#hardModeLetterArray.every((letter) =>
+        this.#guessArray.includes(letter)
+      )
+    )
+      this.#guessContainsLettersFromHardModeArray = true;
+    if (
+      !this.#hardModeLetterArray.every((letter) =>
+        this.#guessArray.includes(letter)
+      )
+    )
+      this.#guessContainsLettersFromHardModeArray = false;
+  }
+
+  _addLettersFromGuessToHardModeLetterArray() {
+    console.log(this.#hardModeLetterArray);
+    let letters = this.#answerArray.filter((el) =>
+      this.#guessArray.includes(el)
+    );
+    console.log(letters);
+    letters.forEach((letter) => {
+      this.#hardModeLetterArray.push(letter);
+    });
+    this.#hardModeLetterArray = [...new Set(this.#hardModeLetterArray)];
+    console.log(this.#hardModeLetterArray);
+  }
+
+  _storeLettersForHardModeInLocalStorage() {
+    localStorage.setItem(
+      "hardModeLetters",
+      JSON.stringify(this.#hardModeLetterArray)
+    );
+  }
+
+  _getLettersForHardModeFromLocalStorage() {
+    let hardModeLetters = JSON.parse(localStorage.getItem("hardModeLetters"));
+    if (!hardModeLetters) return;
+    this.#hardModeLetterArray = hardModeLetters;
+    console.log(this.#hardModeLetterArray);
+  }
+
+  _disableHardModeSlider() {
+    hardModeCheckbox.disabled = true;
+  }
+
+  _toggleHardMode() {
+    if (this.#rowIndex > 0) {
+      alert("cannot activate hard mode");
+      return;
+    }
+    if (hardModeCheckbox.checked) {
+      this.#hardModeIsEnabled = true;
+    }
+    if (!hardModeCheckbox.checked) {
+      this.#hardModeIsEnabled = false;
+    }
+    this._storeHardModeInformationInLocalStorage();
+  }
 
   _storeTheDarkThemeInformationInLocalStorage() {
     localStorage.setItem("darkTheme", JSON.stringify(this.#darkThemeIsEnabled));
@@ -285,6 +394,11 @@ class App {
           button.style.backgroundColor = "rgb(208, 179, 99)";
           button.style.color = "#ffffff";
         }
+        if (
+          button.style.backgroundColor === "rgb(245, 121, 58)" ||
+          button.style.backgroundColor === "rgb(133, 192, 249)"
+        )
+          button.style.color = "#ffffff";
         if (button.style.backgroundColor === "rgb(104, 168, 104)") {
           button.style.backgroundColor = "rgb(104, 168, 104)";
           button.style.color = "#ffffff";
@@ -318,7 +432,87 @@ class App {
     this._storeTheDarkThemeInformationInLocalStorage();
   }
 
-  _toggleHighContrastMode() {}
+  _toggleHighContrastMode() {
+    if (highContrastModeCheckbox.checked) {
+      this.#highContrastModeIsEnabled = true;
+      document.documentElement.style.setProperty(
+        "--correct",
+        "rgb(245, 121, 58)"
+      );
+      document.documentElement.style.setProperty(
+        "--correct-tint",
+        "rgb(246, 134, 78)"
+      );
+      document.documentElement.style.setProperty(
+        "--wrong",
+        "rgb(133, 192, 249)"
+      );
+      backOfBoardTiles.forEach((tile) => {
+        if (tile.style.backgroundColor === "rgb(104, 168, 104)")
+          tile.style.backgroundColor = "rgb(245, 121, 58)";
+        if (tile.style.backgroundColor === "rgb(208, 179, 99)")
+          tile.style.backgroundColor = "rgb(133, 192, 249)";
+      });
+      keyboardButtons.forEach((button) => {
+        if (button.style.backgroundColor === "rgb(104, 168, 104)")
+          button.style.backgroundColor = "rgb(245, 121, 58)";
+        if (button.style.backgroundColor === "rgb(208, 179, 99)")
+          button.style.backgroundColor = "rgb(133, 192, 249)";
+      });
+    }
+    if (!highContrastModeCheckbox.checked) {
+      this.#highContrastModeIsEnabled = false;
+      document.documentElement.style.setProperty(
+        "--correct",
+        "rgb(104, 168, 104)"
+      );
+      document.documentElement.style.setProperty(
+        "--correct-tint",
+        "rgb(111, 178, 111)"
+      );
+      document.documentElement.style.setProperty(
+        "--wrong",
+        "rgb(208, 179, 99)"
+      );
+      backOfBoardTiles.forEach((tile) => {
+        if (tile.style.backgroundColor === "rgb(245, 121, 58)")
+          tile.style.backgroundColor = "rgb(104, 168, 104)";
+        if (tile.style.backgroundColor === "rgb(133, 192, 249)")
+          tile.style.backgroundColor = "rgb(208, 179, 99)";
+      });
+      keyboardButtons.forEach((button) => {
+        if (button.style.backgroundColor === "rgb(245, 121, 58)")
+          button.style.backgroundColor = "rgb(104, 168, 104)";
+        if (button.style.backgroundColor === "rgb(133, 192, 249)")
+          button.style.backgroundColor = "rgb(208, 179, 99)";
+      });
+    }
+    this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
+    this._removeOldKeyboardButtonObjectsFromTheBeginningOfTheKeyboardButtonDataArray();
+    this._storeTheKeyboardDataInLocalStorage();
+    this.#playerBoardDataArray = [];
+    this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
+    this._storeTheBoardDataInLocalStorage();
+    this._storeTheHighContrastModeInformationInLocalStorage();
+  }
+
+  _storeTheHighContrastModeInformationInLocalStorage() {
+    localStorage.setItem(
+      "highContrastModeInfo",
+      JSON.stringify(this.#highContrastModeIsEnabled)
+    );
+  }
+
+  _getTheInformationForHighContrastModeFromLocalStorage() {
+    let highContrastModeInfo = JSON.parse(
+      localStorage.getItem("highContrastModeInfo")
+    );
+    if (!highContrastModeInfo) {
+      this.#highContrastModeIsEnabled = false;
+      return;
+    }
+    this.#highContrastModeIsEnabled = highContrastModeInfo;
+  }
 
   _animateTile() {
     this.#frontOfAllTilesInCurrentRowOfPlay.forEach((el, i) => {
@@ -343,7 +537,9 @@ class App {
       this.#scoreForCurrentRound
     }/6⬛⬛`;
     let greenSquare = "🟩";
+    let orangSquare = "🟧";
     let yellowSquare = "🟨";
+    let blueSquare = "🟦";
     let greySquare = "⬜";
     let condition = (this.#rowIndex + 1) * 5 - 1;
 
@@ -357,8 +553,15 @@ class App {
       if (backOfBoardTiles[i].style.backgroundColor === "rgb(104, 168, 104)") {
         text = text + greenSquare;
       }
+      if (backOfBoardTiles[i].style.backgroundColor === "rgb(245, 121, 58)") {
+        text = text + orangSquare;
+      }
+
       if (backOfBoardTiles[i].style.backgroundColor === "rgb(208, 179, 99)") {
         text = text + yellowSquare;
+      }
+      if (backOfBoardTiles[i].style.backgroundColor === "rgb(133, 192, 249)") {
+        text = text + blueSquare;
       }
       if (i === 4 || i === 9 || i === 14 || i === 19 || i == 24) text += "⬛";
     }
@@ -413,7 +616,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date().setHours(23, 50, 0, 0);
+    this.#now = new Date().setHours(23, 9, 40, 0);
   }
 
   _calculateTimeUntileMidnight() {
@@ -729,6 +932,15 @@ class App {
           this._displayErrorMessageInvalidWord();
         }
         if (this.#theGuessIsAnAcceptableWord) {
+          console.log(this.#hardModeIsEnabled);
+          if (this.#hardModeIsEnabled) {
+            this._checkIfGuessContainsLettersFromHardModeArray();
+            if (!this.#guessContainsLettersFromHardModeArray) {
+              this._shakeCurrentRowOfPlay();
+              alert("must include hints from previous guesses");
+              return;
+            }
+          }
           this._checkIfPlayerGuessMatchesTheAnswer();
           this._updateTheColorsForTheTilesAndKeyboardButtons();
           this._flipTiles();
@@ -781,6 +993,8 @@ class App {
               this._storeTheDataForPlayerStatisticsInLocalStorage();
             }
             this._moveToTheNextRowOfPlay();
+            this._addLettersFromGuessToHardModeLetterArray();
+            this._storeLettersForHardModeInLocalStorage();
             this._resetTheGuessArrayToEmpty();
           }
           this._storeTheDataForGameStateInLocalStorage();
@@ -811,7 +1025,6 @@ class App {
   These are all the methods called in the playGame method
   **************************************************** */
   _identifyCurrentRowOfPlay() {
-    console.log(this.#rowIndex);
     this.#currentRowOfPlay = allBoardRows[this.#rowIndex];
   }
 
@@ -894,19 +1107,29 @@ class App {
   }
 
   _updateTheColorsForTheTilesAndKeyboardButtons() {
-    console.log(wrongLetterColor);
     this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
       // Update the tile colors based on guess
       if (tile.textContent !== this.#answerArray[i]) {
         tile.style.backgroundColor = wrongLetterColor;
         tile.style.color = "white";
       }
+      ("rgb(133, 192, 249)");
       if (this.#answerArray.includes(tile.textContent)) {
-        tile.style.backgroundColor = "#d0b363";
+        if (this.#highContrastModeIsEnabled) {
+          tile.style.backgroundColor = "rgb(133, 192, 249)";
+        }
+        if (!this.#highContrastModeIsEnabled) {
+          tile.style.backgroundColor = "#d0b363";
+        }
         tile.style.color = "white";
       }
       if (tile.textContent === this.#answerArray[i]) {
-        tile.style.backgroundColor = "#68a868";
+        if (this.#highContrastModeIsEnabled) {
+          tile.style.backgroundColor = "rgb(245, 121, 58)";
+        }
+        if (!this.#highContrastModeIsEnabled) {
+          tile.style.backgroundColor = "#68a868";
+        }
         tile.style.color = "white";
       }
 
@@ -915,10 +1138,14 @@ class App {
         if (button.value === tile.textContent) {
           setTimeout(() => {
             button.style.color = "white";
-            if (button.style.backgroundColor === "rgb(104, 168, 104)") {
+            if (button.style.backgroundColor === "rgb(104, 168, 104)")
               button.style.backgroundColor = "rgb(104, 168, 104)";
-            }
-            if (button.style.backgroundColor !== "rgb(104, 168, 104)") {
+            if (button.style.backgroundColor === "rgb(245, 121, 58)")
+              button.style.backgroundColor = "rgb(245, 121, 58)";
+            if (
+              button.style.backgroundColor !== "rgb(104, 168, 104)" &&
+              button.style.backgroundColor !== "rgb(245, 121, 58)"
+            ) {
               button.style.backgroundColor = tile.style.backgroundColor;
             }
           }, 2200);
@@ -945,15 +1172,12 @@ class App {
       "keyboard",
       JSON.stringify(this.#keyboardButtonDataArray)
     );
-    console.log(this.#keyboardButtonDataArray);
   }
 
   _getTheKeyboardDataFromLocalStorage() {
     const keyboardData = JSON.parse(localStorage.getItem("keyboard"));
-    console.log(keyboardData);
 
     if (!keyboardData) return;
-
     this.#keyboardButtonDataArray = keyboardData;
   }
 
@@ -1028,6 +1252,7 @@ class App {
 
   _moveToTheNextRowOfPlay() {
     this.#rowIndex++;
+    if (this.#rowIndex > 0) this._disableHardModeSlider();
     this.#tileIndex = 0;
     if (this.#rowIndex > 6) this.#rowIndex = 6;
   }
@@ -1040,7 +1265,6 @@ class App {
     this.#guessArray.pop();
     this.#tileIndex--;
     if (this.#tileIndex < 0) this.#tileIndex = 0;
-    console.log(this.#tileIndex);
   }
 
   _addTheLetterOfThePressedKeyToGuessArray() {
@@ -1113,6 +1337,7 @@ class App {
     localStorage.removeItem("answer");
     localStorage.removeItem("gamestate");
     localStorage.removeItem("playerScoreData");
+    localStorage.removeItem("hardModeLetters");
   }
 }
 
