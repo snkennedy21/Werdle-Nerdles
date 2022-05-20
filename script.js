@@ -126,9 +126,9 @@ class App {
   #numberOfGamesWithScoreOf6;
   #playerScoresDataArray;
   #werdleNumber;
+  #darkThemeIsEnabled;
 
   constructor() {
-    console.log(this.#rowIndex);
     this._setDateAndTime();
     this._countdown();
     this._getTheDataForTheGameStateFromLocalStorage();
@@ -163,6 +163,10 @@ class App {
     this._displayPlayerScoreStatistics();
     this._buildArrayOfAllKeyboardValues();
     this._updatePlayerScoreStatisticsChart();
+    this._getTheInformationForDarkThemeFromLocalStorage();
+    if (this.#darkThemeIsEnabled) darkThemeCheckbox.checked = true;
+    if (!this.#darkThemeIsEnabled) darkThemeCheckbox.checked = false;
+    this._toggleDarkTheme();
 
     keyboard.addEventListener("click", this._playTheGame.bind(this));
     window.addEventListener("keydown", this._playTheGame.bind(this));
@@ -195,8 +199,22 @@ class App {
   Trial Features
   *********** */
 
+  _storeTheDarkThemeInformationInLocalStorage() {
+    localStorage.setItem("darkTheme", JSON.stringify(this.#darkThemeIsEnabled));
+  }
+
+  _getTheInformationForDarkThemeFromLocalStorage() {
+    let darkThemeInfo = JSON.parse(localStorage.getItem("darkTheme"));
+    if (!darkThemeInfo) {
+      this.#darkThemeIsEnabled = false;
+      return;
+    }
+    this.#darkThemeIsEnabled = darkThemeInfo;
+  }
+
   _toggleDarkTheme() {
     if (darkThemeCheckbox.checked) {
+      this.#darkThemeIsEnabled = true;
       document.documentElement.style.setProperty("--primary", "#131313");
       document.documentElement.style.setProperty("--secondary", "#ffffff");
       document.documentElement.style.setProperty(
@@ -242,6 +260,7 @@ class App {
     }
 
     if (!darkThemeCheckbox.checked) {
+      this.#darkThemeIsEnabled = false;
       document.documentElement.style.setProperty("--primary", "#ffffff");
       document.documentElement.style.setProperty("--secondary", "#131313");
       document.documentElement.style.setProperty(
@@ -260,6 +279,8 @@ class App {
       wrongLetterColor = "#808080";
       keyboardButtons.forEach((button) => {
         button.style.color = "#000000";
+        if (button.style.backgroundColor === "rgb(128, 128, 128)")
+          button.style.color = "#ffffff";
         if (button.style.backgroundColor === "rgb(208, 179, 99)") {
           button.style.backgroundColor = "rgb(208, 179, 99)";
           button.style.color = "#ffffff";
@@ -294,7 +315,10 @@ class App {
     this.#playerBoardDataArray = [];
     this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
     this._storeTheBoardDataInLocalStorage();
+    this._storeTheDarkThemeInformationInLocalStorage();
   }
+
+  _toggleHighContrastMode() {}
 
   _animateTile() {
     this.#frontOfAllTilesInCurrentRowOfPlay.forEach((el, i) => {
@@ -557,12 +581,10 @@ class App {
 
     this.#rowIndex = rowData;
     this.#playerBoardDataArray = boardData;
-    console.log(this.#rowIndex);
   }
 
   _createNewTileObjectsAndPushThemIntoTheBoardDataArray() {
     boardTileContainers.forEach((tile, i) => {
-      console.log(backOfBoardTiles[i].style.backgroundColor);
       let tileBackgroundColor = backOfBoardTiles[i].style.backgroundColor;
       let tileColor = backOfBoardTiles[i].style.color;
       let tileText = backOfBoardTiles[i].textContent;
@@ -599,14 +621,6 @@ class App {
         tile.classList.add("flipped");
       }
     });
-  }
-
-  _getTheKeyboardDataFromLocalStorage() {
-    const keyboardData = JSON.parse(localStorage.getItem("keyboard"));
-
-    if (!keyboardData) return;
-
-    this.#keyboardButtonDataArray = keyboardData;
   }
 
   _createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray() {
@@ -931,6 +945,16 @@ class App {
       "keyboard",
       JSON.stringify(this.#keyboardButtonDataArray)
     );
+    console.log(this.#keyboardButtonDataArray);
+  }
+
+  _getTheKeyboardDataFromLocalStorage() {
+    const keyboardData = JSON.parse(localStorage.getItem("keyboard"));
+    console.log(keyboardData);
+
+    if (!keyboardData) return;
+
+    this.#keyboardButtonDataArray = keyboardData;
   }
 
   _storeTheBoardDataInLocalStorage() {
