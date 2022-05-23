@@ -135,6 +135,7 @@ class App {
   #hardModeIsEnabled;
   #hardModeLetterArray = [];
   #guessContainsLettersFromHardModeArray;
+  #answerArrayCopy;
 
   constructor() {
     this._setDateAndTime();
@@ -145,6 +146,7 @@ class App {
     this._checkIfThereIsCurrentlyAnAnswerInTheAnswerArray();
     if (this.#thereIsNoAnAnswerInTheAnswerArray)
       this._pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray();
+    this.#answerArray = ["E", "M", "C", "E", "E"];
     this._storeTheAnswerInLocalStorage();
     this._getTheBoardDataFromLocalStorage();
     this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
@@ -443,6 +445,8 @@ class App {
         "--wrong",
         "rgb(133, 192, 249)"
       );
+      correctPlaceColor = "rgb(245, 121, 58)";
+      wrongPlaceColor = "rgb(133, 192, 249)";
       backOfBoardTiles.forEach((tile) => {
         if (tile.style.backgroundColor === "rgb(104, 168, 104)")
           tile.style.backgroundColor = "rgb(245, 121, 58)";
@@ -470,6 +474,8 @@ class App {
         "--wrong",
         "rgb(208, 179, 99)"
       );
+      correctPlaceColor = "rgb(104, 168, 104)";
+      wrongPlaceColor = "rgb(208, 179, 99)";
       backOfBoardTiles.forEach((tile) => {
         if (tile.style.backgroundColor === "rgb(245, 121, 58)")
           tile.style.backgroundColor = "rgb(104, 168, 104)";
@@ -1110,56 +1116,78 @@ class App {
   // Guess
   // [R, A, C, E, R];
 
+  // if (tile.textContent !== this.#answerArray[i]) {
+  //   tile.style.backgroundColor = wrongLetterColor;
+  //   tile.style.color = "white";
+  // }
+  // if (answerArrayCopy.includes(tile.textContent)) {
+  //   tile.style.backgroundColor = wrongPlaceColor;
+  //   tile.style.color = "white";
+  //   answerArrayCopy.splice(
+  //     answerArrayCopy.findIndex((el) => el === tile.textContent),
+  //     1
+  //   );
+  // }
+  // if (tile.textContent === this.#answerArray[i]) {
+  //   anotherCopy.splice(
+  //     anotherCopy.findIndex((el) => el === tile.textContent),
+  //     1
+  //   );
+  //   console.log(anotherCopy);
+  //   tile.style.backgroundColor = correctPlaceColor;
+  //   tile.style.color = "white";
+  //   this.#backOfAllTilesInCurrentRowOfPlay.forEach((el) => {
+  //     if (
+  //       el.textContent === tile.textContent &&
+  //       !anotherCopy.includes(el.textContent)
+  //     ) {
+  //       el.style.backgroundColor = "rgb(128, 128, 128)";
+  //     }
+  //     // anotherCopy.splice(
+  //     //   anotherCopy.findIndex((el) => el === tile.textContent),
+  //     //   1
+  //     // );
+  //   });
+  //   tile.style.backgroundColor = correctPlaceColor;
+  // }
+
   _updateTheColorsForTheTilesAndKeyboardButtons() {
-    let answerArrayCopy = [...this.#answerArray];
-    let anotherCopy = [...this.#answerArray];
+    this.#answerArrayCopy = [...this.#answerArray];
+
     this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      // Update the tile colors based on guess
+      // Remove Any Correct Letters From Copy Array
+      if (tile.textContent === this.#answerArray[i]) {
+        this.#answerArrayCopy.splice(
+          this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
+          1
+        );
+      }
+    });
+
+    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+      // Change Tile Color To Grey If It Is Not In The Correct Answer
       if (tile.textContent !== this.#answerArray[i]) {
         tile.style.backgroundColor = wrongLetterColor;
         tile.style.color = "white";
       }
-      ("rgb(133, 192, 249)");
-      if (answerArrayCopy.includes(tile.textContent)) {
-        if (this.#highContrastModeIsEnabled) {
-          tile.style.backgroundColor = "rgb(133, 192, 249)";
-        }
-        if (!this.#highContrastModeIsEnabled) {
-          tile.style.backgroundColor = "#d0b363";
-        }
+
+      // Change Tile Color To Yellow If In Wrong Place And Remove It From Copy Array
+      if (
+        this.#answerArrayCopy.includes(tile.textContent) &&
+        tile.textContent !== this.#answerArray[i]
+      ) {
+        tile.style.backgroundColor = wrongPlaceColor;
         tile.style.color = "white";
-        answerArrayCopy.splice(
-          answerArrayCopy.findIndex((el) => el === tile.textContent),
+        this.#answerArrayCopy.splice(
+          this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
           1
         );
       }
+
+      // Change Tile Color To Green If It Is In Correct Spot
       if (tile.textContent === this.#answerArray[i]) {
-        console.log(anotherCopy);
-        anotherCopy.splice(
-          anotherCopy.findIndex((el) => el === tile.textContent),
-          1
-        );
-        console.log(anotherCopy);
-        if (this.#highContrastModeIsEnabled) {
-          tile.style.backgroundColor = "rgb(245, 121, 58)";
-        }
-        if (!this.#highContrastModeIsEnabled) {
-          tile.style.backgroundColor = "#68a868";
-        }
+        tile.style.backgroundColor = correctPlaceColor;
         tile.style.color = "white";
-        this.#backOfAllTilesInCurrentRowOfPlay.forEach((el) => {
-          if (
-            el.textContent === tile.textContent &&
-            !anotherCopy.includes(el.textContent)
-          ) {
-            el.style.backgroundColor = "rgb(128, 128, 128)";
-          }
-          anotherCopy.splice(
-            anotherCopy.findIndex((el) => el === tile.textContent),
-            1
-          );
-        });
-        tile.style.backgroundColor = "#68a868";
       }
 
       // Update the keyboard button colors based on guess
@@ -1167,14 +1195,9 @@ class App {
         if (button.value === tile.textContent) {
           setTimeout(() => {
             button.style.color = "white";
-            if (button.style.backgroundColor === "rgb(104, 168, 104)")
-              button.style.backgroundColor = "rgb(104, 168, 104)";
-            if (button.style.backgroundColor === "rgb(245, 121, 58)")
-              button.style.backgroundColor = "rgb(245, 121, 58)";
-            if (
-              button.style.backgroundColor !== "rgb(104, 168, 104)" &&
-              button.style.backgroundColor !== "rgb(245, 121, 58)"
-            ) {
+            if (button.style.backgroundColor === correctPlaceColor)
+              button.style.backgroundColor = correctPlaceColor;
+            if (button.style.backgroundColor !== correctPlaceColor) {
               button.style.backgroundColor = tile.style.backgroundColor;
             }
           }, 2200);
@@ -1380,6 +1403,11 @@ class App {
 }
 
 const acceptableWordList = [
+  "EEEKE",
+  "NAANN",
+  "NANNA",
+  "NNNNN",
+  "NOUNS",
   "CIGAR",
   "REBUT",
   "SISSY",
