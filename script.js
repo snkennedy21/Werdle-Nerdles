@@ -63,6 +63,7 @@ const highContrastModeCheckbox = document.querySelector(
 );
 const hardModeCheckbox = document.querySelector(".hard-mode-checkbox");
 const messageContainer = document.querySelector(".message-container");
+const hardModeSwitch = document.querySelector(".hard-mode-switch");
 
 let secondaryColor = "#131313";
 let lightGrey = "#d2d4d9";
@@ -201,6 +202,10 @@ class App {
         this._toggleStatisticsModal();
       }, 1000);
 
+    this._checkIfHardModeCanBeActivated();
+
+    console.log(this.#answerArray);
+
     keyboard.addEventListener("click", this._playTheGame.bind(this));
     window.addEventListener("keydown", this._playTheGame.bind(this));
     headerIconRules.addEventListener("click", this._toggleModal.bind(this));
@@ -234,11 +239,40 @@ class App {
       "change",
       this._toggleHardMode.bind(this)
     );
+    hardModeSwitch.addEventListener(
+      "click",
+      this._displayHardModeMessage.bind(this)
+    );
   }
 
   /* ***********
   Trial Features
   *********** */
+
+  _checkIfHardModeCanBeActivated() {
+    if (this.#rowIndex > 0) hardModeCheckbox.disabled = true;
+  }
+
+  _displayHardModeMessage() {
+    if (this.#rowIndex > 0 && !this.#hardModeIsEnabled) {
+      this._displayMessage("hard mode can only be toggled at start");
+    }
+  }
+
+  _toggleHardMode() {
+    console.log(this.#hardModeIsEnabled);
+    if (this.#rowIndex > 0 && this.#hardModeIsEnabled) {
+      this._disableHardModeSlider();
+      return;
+    }
+    if (hardModeCheckbox.checked) {
+      this.#hardModeIsEnabled = true;
+    }
+    if (!hardModeCheckbox.checked) {
+      this.#hardModeIsEnabled = false;
+    }
+    this._storeHardModeInformationInLocalStorage();
+  }
 
   _getHardModeInformationFromLocalStorage() {
     let hardModeInfo = JSON.parse(localStorage.getItem("hardModeInfo"));
@@ -296,20 +330,7 @@ class App {
 
   _disableHardModeSlider() {
     hardModeCheckbox.disabled = true;
-  }
-
-  _toggleHardMode() {
-    if (this.#rowIndex > 0) {
-      alert("cannot activate hard mode");
-      return;
-    }
-    if (hardModeCheckbox.checked) {
-      this.#hardModeIsEnabled = true;
-    }
-    if (!hardModeCheckbox.checked) {
-      this.#hardModeIsEnabled = false;
-    }
-    this._storeHardModeInformationInLocalStorage();
+    this.#hardModeIsEnabled = false;
   }
 
   _storeTheDarkThemeInformationInLocalStorage() {
@@ -715,7 +736,7 @@ class App {
       if (i === this.#rowIndex) {
         el++;
         this.#playerScoresDataArray.splice(i, 1, el);
-        guessDistributionBars[i].style.backgroundColor = "#68a868";
+        guessDistributionBars[i].style.backgroundColor = correctPlaceColor;
       }
     });
   }
@@ -955,7 +976,7 @@ class App {
             this._checkIfGuessContainsLettersFromHardModeArray();
             if (!this.#guessContainsLettersFromHardModeArray) {
               this._shakeCurrentRowOfPlay();
-              alert("must include hints from previous guesses");
+              this._displayMessage("Must Contain Hints From Previous Guesses");
               return;
             }
           }
@@ -977,7 +998,15 @@ class App {
             this.#currentStreak++;
             this._applyJumpAnimationForTilesInCurrentRowOfPlay();
             setTimeout(() => {
-              this._displayMessage("Good Job Nerdle");
+              if (this.#scoreForCurrentRound < 3)
+                this._displayMessage("Good Job Nerdle");
+              if (
+                this.#scoreForCurrentRound > 3 &&
+                this.#scoreForCurrentRound < 6
+              )
+                this._displayMessage("Not Bad Nerdle");
+              if (this.#scoreForCurrentRound === 6)
+                this._displayMessage("Damn! You Almost F***ed Up Nerdle");
             }, 2200);
             this._checkIfTheMaxStreakShouldIncrease();
             this._calculateThePercentageOfGamesWon();
@@ -1105,7 +1134,7 @@ class App {
       message.addEventListener("transitionend", () => {
         message.remove();
       });
-    }, 1000);
+    }, 1500);
   }
 
   _checkIfTheGuessIsAnAcceptableWord() {
@@ -1270,7 +1299,8 @@ class App {
 
   _moveToTheNextRowOfPlay() {
     this.#rowIndex++;
-    if (this.#rowIndex > 0) this._disableHardModeSlider();
+    if (this.#rowIndex > 0 && !this.#hardModeIsEnabled)
+      this._disableHardModeSlider();
     this.#tileIndex = 0;
     if (this.#rowIndex > 6) this.#rowIndex = 6;
   }
