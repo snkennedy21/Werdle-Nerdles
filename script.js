@@ -264,16 +264,13 @@ class App {
   }
 
   _addLettersFromGuessToHardModeLetterArray() {
-    console.log(this.#hardModeLetterArray);
     let letters = this.#answerArray.filter((el) =>
       this.#guessArray.includes(el)
     );
-    console.log(letters);
     letters.forEach((letter) => {
       this.#hardModeLetterArray.push(letter);
     });
     this.#hardModeLetterArray = [...new Set(this.#hardModeLetterArray)];
-    console.log(this.#hardModeLetterArray);
   }
 
   _storeLettersForHardModeInLocalStorage() {
@@ -287,7 +284,6 @@ class App {
     let hardModeLetters = JSON.parse(localStorage.getItem("hardModeLetters"));
     if (!hardModeLetters) return;
     this.#hardModeLetterArray = hardModeLetters;
-    console.log(this.#hardModeLetterArray);
   }
 
   _disableHardModeSlider() {
@@ -932,7 +928,6 @@ class App {
           this._displayErrorMessageInvalidWord();
         }
         if (this.#theGuessIsAnAcceptableWord) {
-          console.log(this.#hardModeIsEnabled);
           if (this.#hardModeIsEnabled) {
             this._checkIfGuessContainsLettersFromHardModeArray();
             if (!this.#guessContainsLettersFromHardModeArray) {
@@ -1106,7 +1101,18 @@ class App {
     }
   }
 
+  // Answer
+  // [R, O, S, E, S];
+
+  // Copy
+  // [O, S, E, S];
+
+  // Guess
+  // [R, A, C, E, R];
+
   _updateTheColorsForTheTilesAndKeyboardButtons() {
+    let answerArrayCopy = [...this.#answerArray];
+    let anotherCopy = [...this.#answerArray];
     this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
       // Update the tile colors based on guess
       if (tile.textContent !== this.#answerArray[i]) {
@@ -1114,7 +1120,7 @@ class App {
         tile.style.color = "white";
       }
       ("rgb(133, 192, 249)");
-      if (this.#answerArray.includes(tile.textContent)) {
+      if (answerArrayCopy.includes(tile.textContent)) {
         if (this.#highContrastModeIsEnabled) {
           tile.style.backgroundColor = "rgb(133, 192, 249)";
         }
@@ -1122,8 +1128,18 @@ class App {
           tile.style.backgroundColor = "#d0b363";
         }
         tile.style.color = "white";
+        answerArrayCopy.splice(
+          answerArrayCopy.findIndex((el) => el === tile.textContent),
+          1
+        );
       }
       if (tile.textContent === this.#answerArray[i]) {
+        console.log(anotherCopy);
+        anotherCopy.splice(
+          anotherCopy.findIndex((el) => el === tile.textContent),
+          1
+        );
+        console.log(anotherCopy);
         if (this.#highContrastModeIsEnabled) {
           tile.style.backgroundColor = "rgb(245, 121, 58)";
         }
@@ -1131,6 +1147,19 @@ class App {
           tile.style.backgroundColor = "#68a868";
         }
         tile.style.color = "white";
+        this.#backOfAllTilesInCurrentRowOfPlay.forEach((el) => {
+          if (
+            el.textContent === tile.textContent &&
+            !anotherCopy.includes(el.textContent)
+          ) {
+            el.style.backgroundColor = "rgb(128, 128, 128)";
+          }
+          anotherCopy.splice(
+            anotherCopy.findIndex((el) => el === tile.textContent),
+            1
+          );
+        });
+        tile.style.backgroundColor = "#68a868";
       }
 
       // Update the keyboard button colors based on guess
@@ -1335,6 +1364,15 @@ class App {
     localStorage.removeItem("playerBoard");
     localStorage.removeItem("keyboard");
     localStorage.removeItem("answer");
+    localStorage.removeItem("gamestate");
+    localStorage.removeItem("playerScoreData");
+    localStorage.removeItem("hardModeLetters");
+  }
+
+  _simpleReset() {
+    localStorage.removeItem("playerStatistics");
+    localStorage.removeItem("playerBoard");
+    localStorage.removeItem("keyboard");
     localStorage.removeItem("gamestate");
     localStorage.removeItem("playerScoreData");
     localStorage.removeItem("hardModeLetters");
@@ -1606,6 +1644,7 @@ const acceptableWordList = [
   "BRINE",
   "CLOTH",
   "HOARD",
+  "SCARS",
   "SWEET",
   "MONTH",
   "LAPSE",
