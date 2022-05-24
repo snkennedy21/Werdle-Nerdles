@@ -203,6 +203,7 @@ class App {
       }, 1000);
 
     this._checkIfHardModeCanBeActivated();
+    this._updateColorsForGuessDistributionBars();
 
     console.log(this.#answerArray);
 
@@ -260,7 +261,6 @@ class App {
   }
 
   _toggleHardMode() {
-    console.log(this.#hardModeIsEnabled);
     if (this.#rowIndex > 0 && this.#hardModeIsEnabled) {
       this._disableHardModeSlider();
       return;
@@ -646,7 +646,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date().setHours(23, 9, 40, 0);
+    this.#now = new Date().setHours(23, 59, 40, 0);
   }
 
   _calculateTimeUntileMidnight() {
@@ -684,10 +684,6 @@ class App {
         this._updateValuesInThePlayerDataArray();
         this._displayPlayerStatistics();
         this._reset();
-        this.#rowIndex = 0;
-        this.#answerArray = [];
-        this.#guessArray = [];
-        this.#theGameIsNotActive = false;
         this._pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray();
         this._storeTheAnswerInLocalStorage();
         this._storeTheDataForPlayerStatisticsInLocalStorage();
@@ -700,6 +696,8 @@ class App {
     localStorage.removeItem("playerBoard");
     localStorage.removeItem("keyboard");
     localStorage.removeItem("gamestate");
+    localStorage.removeItem("hardModeLetters");
+    localStorage.removeItem("score");
     frontOfBoardTiles.forEach((tile) => {
       tile.style.borderColor = lightGrey;
       tile.style.animation = "";
@@ -713,7 +711,17 @@ class App {
       button.style.color = secondaryColor;
       button.style.backgroundColor = lightGrey;
     });
+    this.#scoreForCurrentRound = 0;
+    this.#rowIndex = 0;
     this.#tileIndex = 0;
+    this.#answerArray = [];
+    this.#guessArray = [];
+    this.#hardModeLetterArray = [];
+    hardModeCheckbox.disabled = false;
+    this.#theGameIsNotActive = false;
+    guessDistributionBars.forEach(
+      (bar) => (bar.style.backgroundColor = wrongLetterColor)
+    );
   }
 
   _setTheScoreForTheCurrentRound() {
@@ -738,6 +746,19 @@ class App {
         this.#playerScoresDataArray.splice(i, 1, el);
         guessDistributionBars[i].style.backgroundColor = correctPlaceColor;
       }
+    });
+  }
+
+  _updateColorsForGuessDistributionBars() {
+    if (this.#scoreForCurrentRound === 0) {
+      guessDistributionBars.forEach(
+        (bar) => (bar.style.backgroundColor = wrongLetterColor)
+      );
+      return;
+    }
+    guessDistributionBars.forEach((bar, i) => {
+      if (i + 1 === this.#scoreForCurrentRound)
+        bar.style.backgroundColor = correctPlaceColor;
     });
   }
 
