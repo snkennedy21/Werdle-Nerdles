@@ -104,7 +104,6 @@ class App {
   #backOfAllTilesInCurrentRowOfPlay;
   #arrayOfAllKeyboardValues = [];
   #theKeyPressedIsAcceptable;
-  #randomNumber;
   #theGuessIsAnAcceptableWord = true;
   #playerIsOnFinalRowOfPlay = false;
   #numberOfGamesPlayed;
@@ -755,6 +754,7 @@ class App {
   }
 
   _getDataForScoreFromLocalStorage() {
+    if (this.#scoreForCurrentRound === undefined) return;
     let score = JSON.parse(localStorage.getItem("score"));
     if (!score) return;
     this.#scoreForCurrentRound = score;
