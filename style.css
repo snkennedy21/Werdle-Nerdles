@@ -35,14 +35,18 @@ html {
 body {
   overflow-y: hidden;
   background-color: var(--primary);
+  position: fixed;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
   position: relative;
-  font-size: 1.8rem;
   padding: 0.5rem 1rem;
   margin-bottom: 1rem;
   border-bottom: 0.5px solid grey;
+  font-size: 1.8rem;
 }
 
 .header__title {
@@ -81,8 +85,12 @@ body {
 .section {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-around;
   align-items: center;
+  margin: 0 auto;
+  height: 90vh;
+  width: 500px;
+  max-width: 100%;
 }
 
 .board {
@@ -128,8 +136,8 @@ body {
 }
 
 .board__tile__container {
-  width: 5.5rem;
-  height: 5.5rem;
+  width: 6rem;
+  height: 6rem;
   perspective: 1000px;
 }
 
@@ -137,8 +145,8 @@ body {
   transform: rotateX(180deg);
 }
 .board__tile {
-  width: 5.5rem;
-  height: 5.5rem;
+  width: 6rem;
+  height: 6rem;
   transform-style: preserve-3d;
   transition: all 1s ease-in-out;
   position: relative;
@@ -179,15 +187,23 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  width: 100%;
+  padding: 0 0.5rem;
 }
 
 .keyboard__row {
   display: flex;
   gap: 0.4rem;
+  width: 100%;
+}
+
+.keyboard__row-2 {
+  padding: 0 2.5rem;
 }
 
 .keyboard__button {
-  width: 4.5rem;
+  flex-grow: 2;
+  flex-shrink: 1;
   height: 5.8rem;
   border: none;
   border-radius: 0.5rem;
@@ -202,7 +218,6 @@ body {
 
 .keyboard__button--enter,
 .keyboard__button--backspace {
-  width: 7rem;
   height: 5.8rem;
   display: flex;
   justify-content: center;
@@ -302,7 +317,8 @@ body {
 
 .rules-modal,
 .settings-modal {
-  width: 48rem;
+  max-width: 90%;
+  width: 50rem;
   padding: 3rem 0;
   opacity: 0;
   transition: all 0.2s linear;
@@ -465,7 +481,6 @@ body {
 .settings-modal__section__description {
   font-size: 1.2rem;
   color: grey;
-  color: var(--secondary);
 }
 
 .switch {
@@ -534,13 +549,14 @@ input:checked + .slider:before {
 }
 
 .statistics-modal {
-  width: 50rem;
   background-color: var(--primary);
   border-radius: 1rem;
   box-shadow: 0 0 10px 5px #0000001f;
   padding: 1rem;
   margin-top: 2rem;
   transition: all 0.2s linear;
+  max-width: 85%;
+  width: 50rem;
 }
 
 .statistics-modal.transform-up {
@@ -589,9 +605,10 @@ input:checked + .slider:before {
 }
 
 .statistics-modal__guess-distribution-container {
-  margin: 0 5.5rem;
+  margin: 0 10%;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0.5rem;
   padding-bottom: 1rem;
 }
@@ -605,6 +622,7 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .statistics-modal__guess-distribution__number {
@@ -621,7 +639,7 @@ input:checked + .slider:before {
   width: 2rem;
   height: 2rem;
   background-color: grey;
-  padding: 0 0.5rem 0 0;
+  padding: 0 0.3rem 0 0;
   font-size: 1.2rem;
   font-weight: 700;
 }
@@ -637,9 +655,9 @@ input:checked + .slider:before {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 50%;
   gap: 1rem;
   border-right: 1px solid black;
-  padding: 1rem 4rem 0 0;
 }
 
 .statistics-modal__next-werdle {
@@ -655,7 +673,9 @@ input:checked + .slider:before {
 }
 
 .statistics-modal__share-button-container {
-  margin: 0 0 0 4rem;
+  width: 50%;
+  display: flex;
+  justify-content: center;
 }
 
 .statistics-modal__share-button {
@@ -665,6 +685,7 @@ input:checked + .slider:before {
   gap: 0.5rem;
   background-color: var(--correct);
   color: white;
+  width: 70%;
   border: none;
   border-radius: 0.5rem;
   font-size: 1.8rem;
