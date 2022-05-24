@@ -666,7 +666,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date().setHours(23, 59, 50, 0);
+    this.#now = new Date();
   }
 
   _calculateTimeUntileMidnight() {
