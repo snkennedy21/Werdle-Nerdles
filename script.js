@@ -365,11 +365,17 @@ class App {
         "--secondary-shadow",
         "#ffffff1f"
       );
-      document.documentElement.style.setProperty("--grey-light", "#3f3f3f");
-      document.documentElement.style.setProperty("--grey-dark", "#67686b");
+      document.documentElement.style.setProperty(
+        "--grey-light",
+        "rgb(63, 63, 63)"
+      );
+      document.documentElement.style.setProperty(
+        "--grey-dark",
+        "rgb(103, 104, 107)"
+      );
       secondaryColor = "#ffffff";
-      lightGrey = "#3f3f3f";
-      darkGrey = "#67686b";
+      lightGrey = "rgb(63, 63, 63)";
+      darkGrey = "rgb(103, 104, 107)";
       wrongLetterColor = "rgb(60, 60, 60)";
       keyboardButtons.forEach((button) => {
         button.style.color = "#ffffff";
@@ -380,10 +386,10 @@ class App {
         if (button.style.backgroundColor === "rgb(128, 128, 128)")
           button.style.backgroundColor = "rgb(60, 60, 60)";
         if (button.style.backgroundColor === "") {
-          button.style.backgroundColor = "rgb(116, 118, 120)";
+          button.style.backgroundColor = "rgb(103, 104, 107)";
         }
         if (button.style.backgroundColor === "rgb(210, 212, 217)") {
-          button.style.backgroundColor = "rgb(116, 118, 120)";
+          button.style.backgroundColor = "rgb(103, 104, 107)";
         }
       });
       frontOfBoardTiles.forEach((tile) => {
@@ -411,12 +417,18 @@ class App {
         "--secondary-shadow",
         "#0000001f"
       );
-      document.documentElement.style.setProperty("--grey-light", "#d2d4d9");
-      document.documentElement.style.setProperty("--grey-dark", "#929397");
+      document.documentElement.style.setProperty(
+        "--grey-light",
+        "rgb(210, 212, 217)"
+      );
+      document.documentElement.style.setProperty(
+        "--grey-dark",
+        "rgb(146, 147, 151)"
+      );
       secondaryColor = "#131313";
-      lightGrey = "#d2d4d9";
-      darkGrey = "#929397";
-      wrongLetterColor = "#808080";
+      lightGrey = "rgb(210, 212, 217)";
+      darkGrey = "rgb(146, 147, 151)";
+      wrongLetterColor = "rgb(128, 128, 128)";
       keyboardButtons.forEach((button) => {
         button.style.color = "#000000";
         if (button.style.backgroundColor === "rgb(128, 128, 128)")
@@ -438,7 +450,7 @@ class App {
           button.style.backgroundColor = "rgb(128, 128, 128)";
           button.style.color = "#ffffff";
         }
-        if (button.style.backgroundColor === "rgb(116, 118, 120)")
+        if (button.style.backgroundColor === "rgb(103, 104, 107)")
           button.style.backgroundColor = "rgb(210, 212, 217)";
       });
       frontOfBoardTiles.forEach((tile) => {
@@ -569,6 +581,7 @@ class App {
   }
 
   _buildBlocks() {
+    this._displayMessage("Copied Results To Clipboard");
     let text;
     if (!this.#hardModeIsEnabled)
       text = `Nerdle Werdle ${this.#werdleNumber} ${
@@ -653,7 +666,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date();
+    this.#now = new Date().setHours(23, 59, 50, 0);
   }
 
   _calculateTimeUntileMidnight() {
@@ -716,7 +729,8 @@ class App {
     });
     keyboardButtons.forEach((button) => {
       button.style.color = secondaryColor;
-      button.style.backgroundColor = lightGrey;
+      if (!this.#darkThemeIsEnabled) button.style.backgroundColor = lightGrey;
+      if (this.#darkThemeIsEnabled) button.style.backgroundColor = darkGrey;
     });
     this.#scoreForCurrentRound = 0;
     this.#rowIndex = 0;
@@ -727,7 +741,7 @@ class App {
     hardModeCheckbox.disabled = false;
     this.#theGameIsNotActive = false;
     guessDistributionBars.forEach(
-      (bar) => (bar.style.backgroundColor = wrongLetterColor)
+      (bar) => (bar.style.backgroundColor = "rgb(128,128,128)")
     );
   }
 
@@ -759,7 +773,7 @@ class App {
   _updateColorsForGuessDistributionBars() {
     if (this.#scoreForCurrentRound === 0) {
       guessDistributionBars.forEach(
-        (bar) => (bar.style.backgroundColor = wrongLetterColor)
+        (bar) => (bar.style.backgroundColor = "rgb(128, 128, 128)")
       );
       return;
     }
@@ -834,8 +848,8 @@ class App {
   }
 
   _pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray() {
-    this.#randomNumber = Math.floor(Math.random() * 2316) + 1;
-    let answer = acceptableWordList[this.#randomNumber];
+    if (this.#werdleNumber === undefined) this.#werdleNumber = 1;
+    let answer = acceptableWordList[this.#werdleNumber - 1];
     [...answer].forEach((el) => this.#answerArray.push(el));
   }
 
@@ -1027,13 +1041,16 @@ class App {
             this.#currentStreak++;
             this._applyJumpAnimationForTilesInCurrentRowOfPlay();
             setTimeout(() => {
-              if (this.#scoreForCurrentRound < 3)
-                this._displayMessage("Good Job Nerdle");
-              if (
-                this.#scoreForCurrentRound > 3 &&
-                this.#scoreForCurrentRound < 6
-              )
+              if (this.#scoreForCurrentRound === 1)
+                this._displayMessage("#$%@#! You Probaly Cheated You Nerdle!");
+              if (this.#scoreForCurrentRound === 2)
+                this._displayMessage("Amazing Job Nerdle");
+              if (this.#scoreForCurrentRound === 3)
+                this._displayMessage("Pretty Good Nerdle");
+              if (this.#scoreForCurrentRound === 4)
                 this._displayMessage("Not Bad Nerdle");
+              if (this.#scoreForCurrentRound === 5)
+                this._displayMessage("Close One Nerdle");
               if (this.#scoreForCurrentRound === 6)
                 this._displayMessage("Damn! You Almost F***ed Up Nerdle");
             }, 2200);
@@ -1049,13 +1066,17 @@ class App {
             setTimeout(() => {
               this._toggleStatisticsModal();
             }, 3800);
-            this._buildBlocks();
             this._storeTheDataForPlayerStatisticsInLocalStorage();
             this._storeTheDataForPlayerScoreStatisticsInLocalStorage();
           }
           if (!this.#playerGuessMatchesTheAnswer) {
             this._checkIfPlayerIsOnFinalRow();
             if (this.#playerIsOnFinalRowOfPlay) {
+              setTimeout(() => {
+                this._displayMessage("The Word Was");
+                this._displayMessage(`${this.#answerArray.join("")}`);
+                this._displayMessage("And You Call Yourself A Nerdle");
+              }, 2200);
               this.#numberOfGamesPlayed++;
               this.#currentStreak = 0;
               this._calculateThePercentageOfGamesWon();
@@ -1067,7 +1088,6 @@ class App {
               setTimeout(() => {
                 this._toggleStatisticsModal();
               }, 3500);
-              this._buildBlocks();
               this._storeTheDataForPlayerStatisticsInLocalStorage();
             }
             this._moveToTheNextRowOfPlay();
@@ -1429,10 +1449,6 @@ class App {
 }
 
 const acceptableWordList = [
-  "EEEKE",
-  "NAANN",
-  "NANNA",
-  "NNNNN",
   "NOUNS",
   "CIGAR",
   "REBUT",
