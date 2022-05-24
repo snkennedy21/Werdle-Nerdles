@@ -118,7 +118,6 @@ class App {
   #keyboardButtonBackgroundColor;
   #keyboardButtonColor;
   #thereIsNoAnAnswerInTheAnswerArray;
-  #playerData;
   #thereIsDataForPlayerStatistics;
   #thereISDataForPlayerScoreStatistics;
   #upcomingMidnight;
@@ -138,6 +137,7 @@ class App {
   #hardModeLetterArray = [];
   #guessContainsLettersFromHardModeArray;
   #answerArrayCopy;
+  #keyBoardIsDisabled;
 
   constructor() {
     this._setDateAndTime();
@@ -204,7 +204,6 @@ class App {
 
     this._checkIfHardModeCanBeActivated();
     this._updateColorsForGuessDistributionBars();
-
     console.log(this.#answerArray);
 
     keyboard.addEventListener("click", this._playTheGame.bind(this));
@@ -249,6 +248,13 @@ class App {
   /* ***********
   Trial Features
   *********** */
+
+  _disableKeyBoard() {
+    this.#keyBoardIsDisabled = true;
+    setTimeout(() => {
+      this.#keyBoardIsDisabled = false;
+    }, 2200);
+  }
 
   _checkIfHardModeCanBeActivated() {
     if (this.#rowIndex > 0) hardModeCheckbox.disabled = true;
@@ -516,6 +522,7 @@ class App {
           button.style.backgroundColor = "rgb(208, 179, 99)";
       });
     }
+    this._updateColorsForGuessDistributionBars();
     this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
     this._removeOldKeyboardButtonObjectsFromTheBeginningOfTheKeyboardButtonDataArray();
     this._storeTheKeyboardDataInLocalStorage();
@@ -646,7 +653,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date().setHours(23, 59, 40, 0);
+    this.#now = new Date();
   }
 
   _calculateTimeUntileMidnight() {
@@ -830,7 +837,6 @@ class App {
     this.#randomNumber = Math.floor(Math.random() * 2316) + 1;
     let answer = acceptableWordList[this.#randomNumber];
     [...answer].forEach((el) => this.#answerArray.push(el));
-    console.log(this.#answerArray);
   }
 
   _storeTheAnswerInLocalStorage() {
@@ -974,6 +980,7 @@ class App {
   This method runs the game whenever a letter/backspace/enter is pressed
   ******************************************************************* */
   _playTheGame(e) {
+    if (this.#keyBoardIsDisabled) return;
     if (this.#theGameIsNotActive) return;
 
     this._identifyCurrentRowOfPlay();
@@ -1001,6 +1008,7 @@ class App {
               return;
             }
           }
+          this._disableKeyBoard();
           this._checkIfPlayerGuessMatchesTheAnswer();
           this._updateTheColorsForTheTilesAndKeyboardButtons();
           this._flipTiles();
@@ -1407,6 +1415,7 @@ class App {
     localStorage.removeItem("gamestate");
     localStorage.removeItem("playerScoreData");
     localStorage.removeItem("hardModeLetters");
+    localStorage.removeItem("score");
   }
 
   _simpleReset() {

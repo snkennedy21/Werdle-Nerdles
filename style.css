@@ -88,8 +88,8 @@ body {
   justify-content: space-around;
   align-items: center;
   margin: 0 auto;
-  height: 90vh;
   width: 500px;
+  height: 90vh;
   max-width: 100%;
 }
 
@@ -136,8 +136,8 @@ body {
 }
 
 .board__tile__container {
-  width: 6rem;
-  height: 6rem;
+  width: 5.6rem;
+  height: 5.6rem;
   perspective: 1000px;
 }
 
@@ -145,8 +145,8 @@ body {
   transform: rotateX(180deg);
 }
 .board__tile {
-  width: 6rem;
-  height: 6rem;
+  width: 5.6rem;
+  height: 5.6rem;
   transform-style: preserve-3d;
   transition: all 1s ease-in-out;
   position: relative;
@@ -188,7 +188,7 @@ body {
   align-items: center;
   gap: 1rem;
   width: 100%;
-  padding: 0 0.5rem;
+  padding: 0 0.5rem 1rem 0.5rem;
 }
 
 .keyboard__row {
