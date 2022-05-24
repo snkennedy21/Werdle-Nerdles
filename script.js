@@ -747,6 +747,8 @@ class App {
   _setTheScoreForTheCurrentRound() {
     if (this.#playerGuessMatchesTheAnswer)
       this.#scoreForCurrentRound = this.#rowIndex + 1;
+    if (!this.#playerGuessMatchesTheAnswer) this.#scoreForCurrentRound = null;
+    console.log(this.#scoreForCurrentRound);
   }
 
   _storeTheDataForTheScoreInLocalStorage() {
@@ -754,7 +756,6 @@ class App {
   }
 
   _getDataForScoreFromLocalStorage() {
-    if (this.#scoreForCurrentRound === undefined) return;
     let score = JSON.parse(localStorage.getItem("score"));
     if (!score) return;
     this.#scoreForCurrentRound = score;
@@ -1070,6 +1071,8 @@ class App {
             this._storeTheDataForPlayerScoreStatisticsInLocalStorage();
           }
           if (!this.#playerGuessMatchesTheAnswer) {
+            this._setTheScoreForTheCurrentRound();
+            this._storeTheDataForTheScoreInLocalStorage();
             this._checkIfPlayerIsOnFinalRow();
             if (this.#playerIsOnFinalRowOfPlay) {
               setTimeout(() => {
