@@ -135,57 +135,26 @@ body {
   gap: 0.5rem;
 }
 
-.board__tile__container {
-  width: 5.6rem;
-  height: 5.6rem;
-  -webkit-perspective: 1000px;
-  perspective: 1000px;
-}
-
-.board__tile__container.flip .board__tile {
-  -webkit-transform: rotateX(180deg);
-  transform: rotateX(180deg);
-}
 .board__tile {
   width: 5.6rem;
   height: 5.6rem;
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
-  -webkit-transition: all 1s ease-in-out;
-  transition: all 1s ease-in-out;
   position: relative;
   color: var(--secondary);
-}
-
-.front,
-.back {
-  height: 100%;
-  width: 100%;
-  position: absolute;
-  font-weight: 700;
-}
-
-.front {
   background: var(--primary);
-  z-index: 2;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  border: 2px solid var(--grey-light);
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 3rem;
-  border: 2px solid var(--grey-light);
+  font-size: 2.8rem;
+  font-weight: 700;
+  opacity: 1;
+  transform-style: preserve-3d;
+  perspective: 1000;
+  transition: transform 0.4s linear;
 }
 
-.back {
-  z-index: 1;
-  -webkit-transform: rotateX(180deg);
-  transform: rotateX(180deg);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 3rem;
-  border: none;
+.board__tile.flip {
+  transform: rotateX(90deg);
 }
 
 .keyboard {
