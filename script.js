@@ -1215,10 +1215,7 @@ class App {
             button.style.color = "white";
             if (button.style.backgroundColor === correctPlaceColor)
               button.style.backgroundColor = correctPlaceColor;
-            if (
-              button.style.backgroundColor !== correctPlaceColor &&
-              button.style.backgroundColor !== wrongPlaceColor
-            ) {
+            if (button.style.backgroundColor !== correctPlaceColor) {
               button.style.backgroundColor = tile.style.backgroundColor;
             }
           }, 2200);
