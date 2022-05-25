@@ -138,16 +138,20 @@ body {
 .board__tile__container {
   width: 5.6rem;
   height: 5.6rem;
+  -webkit-perspective: 1000px;
   perspective: 1000px;
 }
 
 .board__tile__container.flip .board__tile {
+  -webkit-transform: rotateX(180deg);
   transform: rotateX(180deg);
 }
 .board__tile {
   width: 5.6rem;
   height: 5.6rem;
+  -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
+  -webkit-transition: all 1s ease-in-out;
   transition: all 1s ease-in-out;
   position: relative;
   color: var(--secondary);
@@ -164,6 +168,7 @@ body {
 .front {
   background: var(--primary);
   z-index: 2;
+  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   display: flex;
   justify-content: center;
@@ -174,6 +179,7 @@ body {
 
 .back {
   z-index: 1;
+  -webkit-transform: rotateX(180deg);
   transform: rotateX(180deg);
   display: flex;
   justify-content: center;
