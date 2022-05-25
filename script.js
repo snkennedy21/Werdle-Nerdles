@@ -71,8 +71,11 @@ let secondaryColor = "#131313";
 let lightGrey = "#d2d4d9";
 let darkGrey = "#929397";
 let correctPlaceColor = "#68a868";
+let correctPlaceInvisible = "#68a86800";
 let wrongPlaceColor = "#d0b363";
+let wrongPlaceInvisible = "#d0b36300";
 let wrongLetterColor = "#808080";
+let wrongLetterInvisible = "#80808000";
 
 class KeyboardButtonObject {
   constructor(backgroundColor, color) {
@@ -671,7 +674,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date();
+    this.#now = new Date().setHours(23, 30, 50, 0);
   }
 
   _calculateTimeUntileMidnight() {
@@ -731,6 +734,9 @@ class App {
     allBoardTiles.forEach((tile) => {
       tile.classList.remove("flipped");
       tile.classList.remove("flip");
+      tile.style.backgroundColor = primaryColor;
+      tile.style.color = secondaryColor;
+      tile.style.border = "2px solid var(--grey-light)";
     });
     keyboardButtons.forEach((button) => {
       button.style.color = secondaryColor;
@@ -752,7 +758,7 @@ class App {
 
   _setTheScoreForTheCurrentRound() {
     if (this.#playerGuessMatchesTheAnswer)
-      this.#scoreForCurrentRound = this.#rowIndex + 1;
+      this.#scoreForCurrentRound = this.#rowIndex;
     if (!this.#playerGuessMatchesTheAnswer) this.#scoreForCurrentRound = null;
     console.log(this.#scoreForCurrentRound);
   }
@@ -768,10 +774,10 @@ class App {
   }
 
   _increaseNumberOfGamesForASpecificScore() {
-    this.#playerScoresDataArray.forEach((el, i) => {
-      if (i === this.#rowIndex) {
-        el++;
-        this.#playerScoresDataArray.splice(i, 1, el);
+    this.#playerScoresDataArray.forEach((score, i) => {
+      if (i === this.#rowIndex - 1) {
+        score++;
+        this.#playerScoresDataArray.splice(i, 1, score);
         guessDistributionBars[i].style.backgroundColor = correctPlaceColor;
       }
     });
@@ -872,7 +878,6 @@ class App {
 
     this.#rowIndex = rowData;
     this.#playerBoardDataArray = boardData;
-    console.log(this.#playerBoardDataArray);
   }
 
   _createNewTileObjectsAndPushThemIntoTheBoardDataArray() {
@@ -898,7 +903,6 @@ class App {
   }
 
   _setTheContentForTheBoardTiles() {
-    console.log(this.#playerBoardDataArray);
     allBoardTiles.forEach((tile, i) => {
       tile.style.backgroundColor =
         this.#playerBoardDataArray[i].tileBackgroundColor;
@@ -1039,6 +1043,7 @@ class App {
             this.#numberOfGamesPlayed++;
             this.#numberOfGamesWon++;
             this.#currentStreak++;
+            this.#rowIndex++;
             this._applyJumpAnimationForTilesInCurrentRowOfPlay();
             setTimeout(() => {
               if (this.#scoreForCurrentRound === 1)
@@ -1226,50 +1231,55 @@ class App {
       tile.style.backgroundColor = primaryColor;
       tile.style.color = secondaryColor;
     });
-    allBoardTiles.forEach((tile, i) => {
-      if (this.#playerBoardDataArray[i].tileFlipStatus === true) {
+
+    for (let index = 0; index < this.#rowIndex; index++) {
+      let boardTiles = allBoardRows[index].querySelectorAll(".board__tile");
+      console.log(boardTiles);
+      boardTiles.forEach((tile, i) => {
         tile.classList.add("flipped");
-        tile.classList.add("flip");
-      }
-      tile.addEventListener("transitionend", () => {
-        tile.classList.remove("flip");
-        tile.style.border = "none";
-        this.#answerArrayCopy = [...this.#answerArray];
+        setTimeout(() => {
+          tile.classList.add("flip");
+        }, i * 300);
+        tile.addEventListener("transitionend", () => {
+          tile.classList.remove("flip");
+          tile.style.border = "none";
+          this.#answerArrayCopy = [...this.#answerArray];
 
-        // Remove Any Correct Letters From Copy Array
-        if (tile.textContent === this.#answerArray[i]) {
-          this.#answerArrayCopy.splice(
-            this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
-            1
-          );
-        }
+          // Remove Any Correct Letters From Copy Array
+          if (tile.textContent === this.#answerArray[i]) {
+            this.#answerArrayCopy.splice(
+              this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
+              1
+            );
+          }
 
-        // Change Tile Color To Grey If It Is Not In The Correct Answer
-        if (tile.textContent !== this.#answerArray[i]) {
-          tile.style.backgroundColor = wrongLetterColor;
-          tile.style.color = "white";
-        }
+          // Change Tile Color To Grey If It Is Not In The Correct Answer
+          if (tile.textContent !== this.#answerArray[i]) {
+            tile.style.backgroundColor = wrongLetterColor;
+            tile.style.color = "white";
+          }
 
-        // Change Tile Color To Yellow If In Wrong Place And Remove It From Copy Array
-        if (
-          this.#answerArrayCopy.includes(tile.textContent) &&
-          tile.textContent !== this.#answerArray[i]
-        ) {
-          tile.style.backgroundColor = wrongPlaceColor;
-          tile.style.color = "white";
-          this.#answerArrayCopy.splice(
-            this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
-            1
-          );
-        }
+          // Change Tile Color To Yellow If In Wrong Place And Remove It From Copy Array
+          if (
+            this.#answerArrayCopy.includes(tile.textContent) &&
+            tile.textContent !== this.#answerArray[i]
+          ) {
+            tile.style.backgroundColor = wrongPlaceColor;
+            tile.style.color = "white";
+            this.#answerArrayCopy.splice(
+              this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
+              1
+            );
+          }
 
-        // Change Tile Color To Green If It Is In Correct Spot
-        if (tile.textContent === this.#answerArray[i]) {
-          tile.style.backgroundColor = correctPlaceColor;
-          tile.style.color = "white";
-        }
+          // Change Tile Color To Green If It Is In Correct Spot
+          if (tile.textContent === this.#answerArray[i]) {
+            tile.style.backgroundColor = correctPlaceColor;
+            tile.style.color = "white";
+          }
+        });
       });
-    });
+    }
   }
 
   _flipTiles() {
