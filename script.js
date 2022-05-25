@@ -71,11 +71,8 @@ let secondaryColor = "#131313";
 let lightGrey = "#d2d4d9";
 let darkGrey = "#929397";
 let correctPlaceColor = "#68a868";
-let correctPlaceInvisible = "#68a86800";
 let wrongPlaceColor = "#d0b363";
-let wrongPlaceInvisible = "#d0b36300";
 let wrongLetterColor = "#808080";
-let wrongLetterInvisible = "#80808000";
 
 class KeyboardButtonObject {
   constructor(backgroundColor, color) {
@@ -140,6 +137,7 @@ class App {
   #guessContainsLettersFromHardModeArray;
   #answerArrayCopy;
   #keyBoardIsDisabled;
+  #answerArrayAttributes;
 
   constructor() {
     this._setDateAndTime();
@@ -1283,6 +1281,43 @@ class App {
   }
 
   _flipTiles() {
+    this.#answerArrayCopy = JSON.parse(JSON.stringify(this.#answerArray));
+    this.#answerArrayAttributes = JSON.parse(JSON.stringify(this.#answerArray));
+
+    this.#allTilesIncurrentRowOfPlay.forEach((tile, i) => {
+      if (tile.textContent === this.#answerArray[i]) {
+        this.#answerArrayAttributes.splice(
+          this.#answerArrayAttributes.findIndex(
+            (el) => el === tile.textContent
+          ),
+          1
+        );
+      }
+    });
+
+    this.#allTilesIncurrentRowOfPlay.forEach((tile, i) => {
+      if (tile.textContent !== this.#answerArray[i]) {
+        tile.setAttribute("color", wrongLetterColor);
+      }
+
+      if (
+        this.#answerArrayAttributes.includes(tile.textContent) &&
+        tile.textContent !== this.#answerArray[i]
+      ) {
+        tile.setAttribute("color", wrongPlaceColor);
+        this.#answerArrayAttributes.splice(
+          this.#answerArrayAttributes.findIndex(
+            (el) => el === tile.textContent
+          ),
+          1
+        );
+      }
+
+      if (tile.textContent === this.#answerArray[i]) {
+        tile.setAttribute("color", correctPlaceColor);
+      }
+    });
+
     this.#allTilesIncurrentRowOfPlay.forEach((tile, i) => {
       tile.classList.add("flipped");
       setTimeout(() => {
@@ -1291,40 +1326,9 @@ class App {
       tile.addEventListener("transitionend", () => {
         tile.classList.remove("flip");
         tile.style.border = "none";
-        this.#answerArrayCopy = [...this.#answerArray];
 
-        // Remove Any Correct Letters From Copy Array
-        if (tile.textContent === this.#answerArray[i]) {
-          this.#answerArrayCopy.splice(
-            this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
-            1
-          );
-        }
-
-        // Change Tile Color To Grey If It Is Not In The Correct Answer
-        if (tile.textContent !== this.#answerArray[i]) {
-          tile.style.backgroundColor = wrongLetterColor;
-          tile.style.color = "white";
-        }
-
-        // Change Tile Color To Yellow If In Wrong Place And Remove It From Copy Array
-        if (
-          this.#answerArrayCopy.includes(tile.textContent) &&
-          tile.textContent !== this.#answerArray[i]
-        ) {
-          tile.style.backgroundColor = wrongPlaceColor;
-          tile.style.color = "white";
-          this.#answerArrayCopy.splice(
-            this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
-            1
-          );
-        }
-
-        // Change Tile Color To Green If It Is In Correct Spot
-        if (tile.textContent === this.#answerArray[i]) {
-          tile.style.backgroundColor = correctPlaceColor;
-          tile.style.color = "white";
-        }
+        tile.style.backgroundColor = tile.getAttribute("color");
+        tile.style.color = primaryColor;
       });
     });
   }
