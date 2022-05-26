@@ -1094,9 +1094,7 @@ class App {
             this._checkIfPlayerIsOnFinalRow();
             if (this.#playerIsOnFinalRowOfPlay) {
               setTimeout(() => {
-                this._displayMessage("The Word Was");
-                this._displayMessage(`${this.#answerArray.join("")}`);
-                this._displayMessage("And You Call Yourself A Nerdle");
+                this._displayMessage(`🤦‍♂️ ${this.#answerArray.join("")} 🤦‍♀️`);
               }, 2200);
               this.#numberOfGamesPlayed++;
               this.#currentStreak = 0;
