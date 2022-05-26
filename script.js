@@ -683,7 +683,7 @@ class App {
 
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
-    this.#upcomingMidnight.setHours(9, 10, 0, 0);
+    this.#upcomingMidnight.setHours(24, 0, 0, 0);
     this.#now = new Date();
   }
 
