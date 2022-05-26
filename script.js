@@ -21,7 +21,7 @@ const rulesModalCloseIcon = document.querySelector(".rules-modal__close-icon");
 const headerIconRules = document.querySelector(".header__rules-icon");
 const modalContainer = document.querySelector(".modal__container");
 const rulesModal = document.querySelector(".rules-modal");
-const exampleDivFlips = document.querySelectorAll(".example__div-flip");
+const exampleDiv = document.querySelectorAll(".example__flip");
 const exampleBack = document.querySelector(".example__back");
 const headerIconSettings = document.querySelector(".header__settings-icon");
 const settingsModal = document.querySelector(".settings-modal");
@@ -153,7 +153,6 @@ class App {
     this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
     this._removeOldTileObjectsFromTheBoardDataArray();
     this._setTheContentForTheBoardTiles();
-    this._flipTheTilesThatHaveContent();
     this._getTheKeyboardDataFromLocalStorage();
     this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
     this._removeOldKeyboardButtonObjectsFromTheEndOfTheKeyboardButtonDataArray();
@@ -178,6 +177,9 @@ class App {
 
     this._getDataForScoreFromLocalStorage();
 
+    this._identifyCurrentRowOfPlay();
+    if (!this.#theGameIsNotActive) this._selectTilesInCurrentRowOfPlay();
+
     this._getHardModeInformationFromLocalStorage();
     if (this.#hardModeIsEnabled) {
       hardModeCheckbox.checked = true;
@@ -190,6 +192,7 @@ class App {
     if (this.#darkThemeIsEnabled) darkThemeCheckbox.checked = true;
     if (!this.#darkThemeIsEnabled) darkThemeCheckbox.checked = false;
     this._toggleDarkTheme();
+
     this._getTheInformationForHighContrastModeFromLocalStorage();
     if (this.#highContrastModeIsEnabled)
       highContrastModeCheckbox.checked = true;
@@ -197,10 +200,14 @@ class App {
       highContrastModeCheckbox.checked = false;
     this._toggleHighContrastMode();
 
-    if (this.#theGameIsNotActive)
+    this._flipTheTilesThatHaveContent();
+
+    if (this.#theGameIsNotActive) {
+      timerContainer.classList.remove("hidden");
       setTimeout(() => {
         this._toggleStatisticsModal();
       }, 1000);
+    }
 
     this._checkIfHardModeCanBeActivated();
     this._updateColorsForGuessDistributionBars();
@@ -396,6 +403,7 @@ class App {
       allBoardTiles.forEach((tile) => {
         tile.style.borderColor = lightGrey;
       });
+
       allBoardTiles.forEach((tile) => {
         if (tile.style.backgroundColor === "rgb(208, 179, 99)")
           tile.style.backgroundColor = "rgb(208, 179, 99)";
@@ -472,6 +480,10 @@ class App {
       });
     }
 
+    exampleDiv.forEach((el) => {
+      el.style.backgroundColor = primaryColor;
+      el.style.color = secondaryColor;
+    });
     this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
     this._removeOldKeyboardButtonObjectsFromTheBeginningOfTheKeyboardButtonDataArray();
     this._storeTheKeyboardDataInLocalStorage();
@@ -672,7 +684,7 @@ class App {
   _setDateAndTime() {
     this.#upcomingMidnight = new Date();
     this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date().setHours(23, 30, 50, 0);
+    this.#now = new Date().setHours(23, 59, 40, 0);
   }
 
   _calculateTimeUntileMidnight() {
@@ -713,6 +725,7 @@ class App {
         this._pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray();
         this._storeTheAnswerInLocalStorage();
         this._storeTheDataForPlayerStatisticsInLocalStorage();
+        console.log(this.#answerArray);
       }
     }, 1000);
   }
@@ -747,11 +760,13 @@ class App {
     this.#answerArray = [];
     this.#guessArray = [];
     this.#hardModeLetterArray = [];
+    this.#playerIsOnFinalRowOfPlay = false;
     hardModeCheckbox.disabled = false;
     this.#theGameIsNotActive = false;
     guessDistributionBars.forEach(
       (bar) => (bar.style.backgroundColor = "rgb(128,128,128)")
     );
+    timerContainer.classList.add("hidden");
   }
 
   _setTheScoreForTheCurrentRound() {
@@ -1137,6 +1152,9 @@ class App {
   _selectTilesInCurrentRowOfPlay() {
     this.#allTilesIncurrentRowOfPlay =
       this.#currentRowOfPlay.querySelectorAll(".board__tile");
+    this.#allTilesIncurrentRowOfPlay.forEach((tile) => {
+      tile.style.color = secondaryColor;
+    });
   }
 
   _identifyWhichKeyWasPressed(e) {
@@ -1225,14 +1243,13 @@ class App {
   }
 
   _flipTheTilesThatHaveContent() {
-    this.#answerArrayCopy = [...this.#answerArray];
-
     allBoardTiles.forEach((tile) => {
       tile.style.backgroundColor = primaryColor;
       tile.style.color = secondaryColor;
     });
 
     for (let index = 0; index < this.#rowIndex; index++) {
+      this.#answerArrayCopy = [...this.#answerArray];
       let boardTiles = allBoardRows[index].querySelectorAll(".board__tile");
 
       boardTiles.forEach((tile, i) => {
@@ -1275,7 +1292,7 @@ class App {
           tile.classList.remove("flip");
           tile.style.border = "none";
           tile.style.backgroundColor = tile.getAttribute("color");
-          tile.style.color = primaryColor;
+          tile.style.color = "white";
         });
       });
     }
@@ -1328,7 +1345,7 @@ class App {
         tile.style.border = "none";
 
         tile.style.backgroundColor = tile.getAttribute("color");
-        tile.style.color = primaryColor;
+        tile.style.color = "white";
       });
     });
   }
@@ -1460,8 +1477,16 @@ class App {
       settingsModal.classList.toggle("hidden");
       rulesModal.classList.toggle("translate-up");
       setTimeout(() => {
-        exampleDivFlips.forEach((el) => {
-          el.classList.toggle("flip");
+        exampleDiv.forEach((el, i) => {
+          el.classList.add("flip");
+          el.addEventListener("transitionend", () => {
+            el.classList.remove("flip");
+            el.style.border = "none";
+            el.style.color = "white";
+            if (i === 0) el.style.backgroundColor = correctPlaceColor;
+            if (i === 1) el.style.backgroundColor = wrongPlaceColor;
+            if (i === 2) el.style.backgroundColor = wrongLetterColor;
+          });
         });
       }, 200);
     }
@@ -1469,8 +1494,10 @@ class App {
       rulesModal.classList.toggle("translate-up");
       setTimeout(() => {
         settingsModal.classList.toggle("hidden");
-        exampleDivFlips.forEach((el) => {
-          el.classList.toggle("flip");
+        exampleDiv.forEach((el) => {
+          el.style.border = "2px solid var(--grey-dark)";
+          el.style.color = secondaryColor;
+          el.style.backgroundColor = primaryColor;
         });
       }, 200);
     }
@@ -1511,9 +1538,9 @@ class App {
 }
 
 const acceptableWordList = [
+  "REBUT",
   "NOUNS",
   "CIGAR",
-  "REBUT",
   "SISSY",
   "HUMPH",
   "AWAKE",

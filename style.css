@@ -369,10 +369,8 @@ body {
   gap: 0.5rem;
 }
 
-.example__div-flip {
-  perspective: 100rem;
-}
-.example__div {
+.example__div,
+.example__flip {
   width: 4rem;
   height: 4rem;
   font-size: 3rem;
@@ -381,51 +379,14 @@ body {
   justify-content: center;
   align-items: center;
   position: relative;
-  transition: all 0.4s linear;
+  transition: transform 0.3s linear;
   transform-style: preserve-3d;
   background-color: var(--primary);
-}
-
-.front-border {
   border: 2px solid var(--grey-dark);
 }
 
-.example__front,
-.example__back {
-  height: 100%;
-  width: 100%;
-  position: absolute;
-}
-
-.example__front {
-  background: var(--primary);
-  z-index: 10;
-  backface-visibility: hidden;
-  border: 2px solid var(--grey-light);
-}
-
-.example__back {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9;
-  color: white;
-  border: none;
-  transform: rotateX(180deg);
-}
-
-.example__back--green {
-  background: var(--correct);
-}
-.example__back--yellow {
-  background: var(--wrong);
-}
-.example__back--grey {
-  background: grey;
-}
-
-.example__div-flip.flip .example__div {
-  transform: rotateX(180deg);
+.example__flip.flip {
+  transform: rotateX(90deg);
 }
 
 .example__text {
