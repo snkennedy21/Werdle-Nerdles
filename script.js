@@ -119,7 +119,7 @@ class App {
   #thereIsNoAnAnswerInTheAnswerArray;
   #thereIsDataForPlayerStatistics;
   #thereISDataForPlayerScoreStatistics;
-  #upcomingMidnight;
+  #midnight;
   #now;
   #timeUntilMidnight;
   #numberOfGamesWithScoreOf1;
@@ -140,7 +140,8 @@ class App {
   #answerArrayAttributes;
 
   constructor() {
-    this._setDateAndTime();
+    this._getMidnightFromLocalStorage();
+    this._storeMidnightInLocalStorage();
     this._countdown();
     this._getLettersForHardModeFromLocalStorage();
     this._getTheDataForTheGameStateFromLocalStorage();
@@ -255,6 +256,114 @@ class App {
   /* ***********
   Trial Features
   *********** */
+
+  _getMidnightFromLocalStorage() {
+    let midnight = JSON.parse(localStorage.getItem("midnight"));
+    console.log(midnight);
+    if (!midnight) {
+      console.log("no data");
+      this._setDateAndTime();
+      return;
+    }
+    console.log("yes data");
+    this.#midnight = midnight;
+  }
+
+  _storeMidnightInLocalStorage() {
+    console.log(this.#midnight);
+    localStorage.setItem("midnight", JSON.stringify(this.#midnight));
+  }
+
+  _setDateAndTime() {
+    this.#midnight = new Date(2022, 4, 27, 24, 0, 0, 0);
+    this.#midnight.setHours(24, 0, 0, 0);
+    this.#midnight = this.#midnight.getTime();
+    console.log(this.#midnight);
+  }
+
+  _calculateTimeUntileMidnight() {
+    this.#now = new Date();
+    this.#timeUntilMidnight = this.#midnight - this.#now.getTime();
+  }
+
+  _countdown() {
+    this._calculateTimeUntileMidnight();
+
+    setInterval(() => {
+      let second = 1000;
+      let minute = second * 60;
+      let hour = minute * 60;
+      let day = hour * 24;
+
+      let textHour = Math.floor((this.#timeUntilMidnight % day) / hour);
+      let textMinute = Math.floor((this.#timeUntilMidnight % hour) / minute);
+      let textSecond = Math.floor((this.#timeUntilMidnight % minute) / second);
+
+      document.querySelector(
+        ".statistics-modal__time"
+      ).textContent = `${this._makeNumbeTwoDigits(
+        textHour
+      )}:${this._makeNumbeTwoDigits(textMinute)}:${this._makeNumbeTwoDigits(
+        textSecond
+      )}`;
+
+      this.#timeUntilMidnight = this.#timeUntilMidnight - 1000;
+      if (this.#timeUntilMidnight < 0) {
+        this.#now = new Date().getTime();
+        this.#midnight = new Date();
+        this.#midnight.setHours(24, 0, 0, 0);
+        this._calculateTimeUntileMidnight();
+        if (!this.#theGameIsNotActive) this.#currentStreak = 0;
+        this.#werdleNumber++;
+        this._updateValuesInThePlayerDataArray();
+        this._displayPlayerStatistics();
+        this._reset();
+        this._pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray();
+        this._storeTheAnswerInLocalStorage();
+        this._storeTheDataForPlayerStatisticsInLocalStorage();
+        console.log(this.#answerArray);
+      }
+    }, 1000);
+  }
+
+  _reset() {
+    localStorage.removeItem("answer");
+    localStorage.removeItem("playerBoard");
+    localStorage.removeItem("keyboard");
+    localStorage.removeItem("gamestate");
+    localStorage.removeItem("hardModeLetters");
+    localStorage.removeItem("score");
+    allBoardTiles.forEach((tile) => {
+      tile.style.borderColor = lightGrey;
+      tile.style.animation = "";
+      tile.textContent = "";
+    });
+    allBoardTiles.forEach((tile) => {
+      tile.classList.remove("flipped");
+      tile.classList.remove("flip");
+      tile.style.backgroundColor = primaryColor;
+      tile.style.color = secondaryColor;
+      tile.style.border = "2px solid var(--grey-light)";
+    });
+    keyboardButtons.forEach((button) => {
+      button.style.color = secondaryColor;
+      if (!this.#darkThemeIsEnabled) button.style.backgroundColor = lightGrey;
+      if (this.#darkThemeIsEnabled) button.style.backgroundColor = darkGrey;
+    });
+    this.#scoreForCurrentRound = 0;
+    this.#rowIndex = 0;
+    this.#tileIndex = 0;
+    this.#answerArray = [];
+    this.#guessArray = [];
+    this.#hardModeLetterArray = [];
+    this.#playerIsOnFinalRowOfPlay = false;
+    hardModeCheckbox.disabled = false;
+    this.#theGameIsNotActive = false;
+    guessDistributionBars.forEach(
+      (bar) => (bar.style.backgroundColor = "rgb(128,128,128)")
+    );
+    timerContainer.classList.add("hidden");
+  }
 
   _disableKeyBoard() {
     this.#keyBoardIsDisabled = true;
@@ -679,94 +788,6 @@ class App {
 
   _makeNumbeTwoDigits(n) {
     return (n < 10 ? "0" : "") + n;
-  }
-
-  _setDateAndTime() {
-    this.#upcomingMidnight = new Date();
-    this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date();
-  }
-
-  _calculateTimeUntileMidnight() {
-    this.#timeUntilMidnight = this.#upcomingMidnight.getTime() - this.#now;
-  }
-
-  _countdown() {
-    this._calculateTimeUntileMidnight();
-    setInterval(() => {
-      let second = 1000;
-      let minute = second * 60;
-      let hour = minute * 60;
-      let day = hour * 24;
-
-      let textHour = Math.floor((this.#timeUntilMidnight % day) / hour);
-      let textMinute = Math.floor((this.#timeUntilMidnight % hour) / minute);
-      let textSecond = Math.floor((this.#timeUntilMidnight % minute) / second);
-
-      document.querySelector(
-        ".statistics-modal__time"
-      ).textContent = `${this._makeNumbeTwoDigits(
-        textHour
-      )}:${this._makeNumbeTwoDigits(textMinute)}:${this._makeNumbeTwoDigits(
-        textSecond
-      )}`;
-
-      this.#timeUntilMidnight = this.#timeUntilMidnight - 1000;
-      if (this.#timeUntilMidnight < 0) {
-        this.#now = new Date().getTime();
-        this.#upcomingMidnight = new Date();
-        this.#upcomingMidnight.setHours(24, 0, 0, 0);
-        this._calculateTimeUntileMidnight();
-        if (!this.#theGameIsNotActive) this.#currentStreak = 0;
-        this.#werdleNumber++;
-        this._updateValuesInThePlayerDataArray();
-        this._displayPlayerStatistics();
-        this._reset();
-        this._pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray();
-        this._storeTheAnswerInLocalStorage();
-        this._storeTheDataForPlayerStatisticsInLocalStorage();
-        console.log(this.#answerArray);
-      }
-    }, 1000);
-  }
-
-  _reset() {
-    localStorage.removeItem("answer");
-    localStorage.removeItem("playerBoard");
-    localStorage.removeItem("keyboard");
-    localStorage.removeItem("gamestate");
-    localStorage.removeItem("hardModeLetters");
-    localStorage.removeItem("score");
-    allBoardTiles.forEach((tile) => {
-      tile.style.borderColor = lightGrey;
-      tile.style.animation = "";
-      tile.textContent = "";
-    });
-    allBoardTiles.forEach((tile) => {
-      tile.classList.remove("flipped");
-      tile.classList.remove("flip");
-      tile.style.backgroundColor = primaryColor;
-      tile.style.color = secondaryColor;
-      tile.style.border = "2px solid var(--grey-light)";
-    });
-    keyboardButtons.forEach((button) => {
-      button.style.color = secondaryColor;
-      if (!this.#darkThemeIsEnabled) button.style.backgroundColor = lightGrey;
-      if (this.#darkThemeIsEnabled) button.style.backgroundColor = darkGrey;
-    });
-    this.#scoreForCurrentRound = 0;
-    this.#rowIndex = 0;
-    this.#tileIndex = 0;
-    this.#answerArray = [];
-    this.#guessArray = [];
-    this.#hardModeLetterArray = [];
-    this.#playerIsOnFinalRowOfPlay = false;
-    hardModeCheckbox.disabled = false;
-    this.#theGameIsNotActive = false;
-    guessDistributionBars.forEach(
-      (bar) => (bar.style.backgroundColor = "rgb(128,128,128)")
-    );
-    timerContainer.classList.add("hidden");
   }
 
   _setTheScoreForTheCurrentRound() {
@@ -1523,6 +1544,7 @@ class App {
     localStorage.removeItem("playerScoreData");
     localStorage.removeItem("hardModeLetters");
     localStorage.removeItem("score");
+    localStorage.removeItem("midnight");
   }
 
   _simpleReset() {
