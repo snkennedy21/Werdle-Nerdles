@@ -1,5 +1,5 @@
 "use strict";
-const boardTiles = document.querySelectorAll(".board__tile");
+const allBoardTiles = document.querySelectorAll(".board__tile");
 const allBoardRows = document.querySelectorAll(".board__row");
 const keyboard = document.querySelector(".keyboard");
 const keyboardButtons = document.querySelectorAll(".keyboard__button");
@@ -7,8 +7,6 @@ const keyboardButtonBackspace = document.querySelector(
   ".keyboard__button--backspace"
 );
 const keyboardButtonEnter = document.querySelector(".keyboard__button--enter");
-const frontOfBoardTiles = document.querySelectorAll(".front");
-const backOfBoardTiles = document.querySelectorAll(".back");
 const boardTileContainers = document.querySelectorAll(
   ".board__tile__container"
 );
@@ -23,7 +21,7 @@ const rulesModalCloseIcon = document.querySelector(".rules-modal__close-icon");
 const headerIconRules = document.querySelector(".header__rules-icon");
 const modalContainer = document.querySelector(".modal__container");
 const rulesModal = document.querySelector(".rules-modal");
-const exampleDivFlips = document.querySelectorAll(".example__div-flip");
+const exampleDiv = document.querySelectorAll(".example__flip");
 const exampleBack = document.querySelector(".example__back");
 const headerIconSettings = document.querySelector(".header__settings-icon");
 const settingsModal = document.querySelector(".settings-modal");
@@ -64,7 +62,11 @@ const highContrastModeCheckbox = document.querySelector(
 const hardModeCheckbox = document.querySelector(".hard-mode-checkbox");
 const messageContainer = document.querySelector(".message-container");
 const hardModeSwitch = document.querySelector(".hard-mode-switch");
+const timerContainer = document.querySelector(
+  ".statistics-modal__share-and-timer-container"
+);
 
+let primaryColor = "#ffffff";
 let secondaryColor = "#131313";
 let lightGrey = "#d2d4d9";
 let darkGrey = "#929397";
@@ -99,12 +101,9 @@ class App {
   #guessArrayIsFull = false;
   #playerGuessMatchesTheAnswer = false;
   #currentRowOfPlay;
-  #allTileContainersInCurrentRowOfPlay;
-  #frontOfAllTilesInCurrentRowOfPlay;
-  #backOfAllTilesInCurrentRowOfPlay;
+  #allTilesIncurrentRowOfPlay;
   #arrayOfAllKeyboardValues = [];
   #theKeyPressedIsAcceptable;
-  #randomNumber;
   #theGuessIsAnAcceptableWord = true;
   #playerIsOnFinalRowOfPlay = false;
   #numberOfGamesPlayed;
@@ -118,10 +117,9 @@ class App {
   #keyboardButtonBackgroundColor;
   #keyboardButtonColor;
   #thereIsNoAnAnswerInTheAnswerArray;
-  #playerData;
   #thereIsDataForPlayerStatistics;
   #thereISDataForPlayerScoreStatistics;
-  #upcomingMidnight;
+  #midnight;
   #now;
   #timeUntilMidnight;
   #numberOfGamesWithScoreOf1;
@@ -138,9 +136,21 @@ class App {
   #hardModeLetterArray = [];
   #guessContainsLettersFromHardModeArray;
   #answerArrayCopy;
+  #keyBoardIsDisabled;
+  #answerArrayAttributes;
+  #gameLaunchTime;
+  #timeSinceGameLaunched;
+  #numberOfDaysSinceGameLaunched;
 
   constructor() {
-    this._setDateAndTime();
+    this._getDataForPlayerStatisticsFromLocalStorage();
+    if (!this.#thereIsDataForPlayerStatistics)
+      this._setDataForPlayerStatisticsToZero();
+    if (this.#thereIsDataForPlayerStatistics)
+      this._updateDataForPlayerStatistics();
+
+    this._getDataForNumberOfDaysSinceGameLaunch();
+    this._setGameLaunchTime();
     this._countdown();
     this._getLettersForHardModeFromLocalStorage();
     this._getTheDataForTheGameStateFromLocalStorage();
@@ -153,16 +163,9 @@ class App {
     this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
     this._removeOldTileObjectsFromTheBoardDataArray();
     this._setTheContentForTheBoardTiles();
-    this._flipTheTilesThatHaveContent();
     this._getTheKeyboardDataFromLocalStorage();
     this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
     this._removeOldKeyboardButtonObjectsFromTheEndOfTheKeyboardButtonDataArray();
-
-    this._getDataForPlayerStatisticsFromLocalStorage();
-    if (!this.#thereIsDataForPlayerStatistics)
-      this._setDataForPlayerStatisticsToZero();
-    if (this.#thereIsDataForPlayerStatistics)
-      this._updateDataForPlayerStatistics();
 
     this._getDataForPlayerScoreStatisticsFromLocalStorage();
     if (!this.#thereISDataForPlayerScoreStatistics)
@@ -178,6 +181,9 @@ class App {
 
     this._getDataForScoreFromLocalStorage();
 
+    this._identifyCurrentRowOfPlay();
+    if (!this.#theGameIsNotActive) this._selectTilesInCurrentRowOfPlay();
+
     this._getHardModeInformationFromLocalStorage();
     if (this.#hardModeIsEnabled) {
       hardModeCheckbox.checked = true;
@@ -190,6 +196,7 @@ class App {
     if (this.#darkThemeIsEnabled) darkThemeCheckbox.checked = true;
     if (!this.#darkThemeIsEnabled) darkThemeCheckbox.checked = false;
     this._toggleDarkTheme();
+
     this._getTheInformationForHighContrastModeFromLocalStorage();
     if (this.#highContrastModeIsEnabled)
       highContrastModeCheckbox.checked = true;
@@ -197,14 +204,17 @@ class App {
       highContrastModeCheckbox.checked = false;
     this._toggleHighContrastMode();
 
-    if (this.#theGameIsNotActive)
+    this._flipTheTilesThatHaveContent();
+
+    if (this.#theGameIsNotActive) {
+      timerContainer.classList.remove("hidden");
       setTimeout(() => {
         this._toggleStatisticsModal();
       }, 1000);
+    }
 
     this._checkIfHardModeCanBeActivated();
     this._updateColorsForGuessDistributionBars();
-
     console.log(this.#answerArray);
 
     keyboard.addEventListener("click", this._playTheGame.bind(this));
@@ -249,6 +259,156 @@ class App {
   /* ***********
   Trial Features
   *********** */
+
+  _setGameLaunchTime() {
+    this.#gameLaunchTime = new Date(2022, 4, 26, 24, 0, 0, 0);
+    this.#gameLaunchTime = this.#gameLaunchTime.getTime();
+  }
+
+  _calculateTimeSinceGameLaunched() {
+    this.#now = new Date();
+    this.#timeSinceGameLaunched = this.#gameLaunchTime - this.#now.getTime();
+  }
+
+  _calculateTimeUntileMidnight() {
+    this.#now = new Date();
+    this.#midnight = new Date();
+    this.#midnight.setHours(24, 0, 0, 0);
+    this.#timeUntilMidnight = this.#midnight - this.#now.getTime();
+  }
+
+  _getDataForNumberOfDaysSinceGameLaunch() {
+    let days = JSON.parse(localStorage.getItem("daysSinceLaunch"));
+    if (!days) return;
+    this.#numberOfDaysSinceGameLaunched = days;
+  }
+
+  _storeDataForNumberOfDaysSinceGameLaunch() {
+    localStorage.setItem(
+      "daysSinceLaunch",
+      this.#numberOfDaysSinceGameLaunched
+    );
+  }
+
+  _countdown() {
+    this._calculateTimeSinceGameLaunched();
+
+    if (this.#timeSinceGameLaunched < 0) {
+      let currentNumberOfDaysSinceGameLaunced = Math.ceil(
+        Math.abs(this.#timeSinceGameLaunched / 86400000)
+      );
+      this.#werdleNumber = currentNumberOfDaysSinceGameLaunced;
+      if (
+        currentNumberOfDaysSinceGameLaunced -
+          this.#numberOfDaysSinceGameLaunched ===
+        1
+      )
+        this._reset();
+
+      this.#numberOfDaysSinceGameLaunched = currentNumberOfDaysSinceGameLaunced;
+      this._storeDataForNumberOfDaysSinceGameLaunch();
+
+      this.#werdleNumber = currentNumberOfDaysSinceGameLaunced;
+      this._calculateTimeUntileMidnight();
+
+      // if (!this.#theGameIsNotActive) this.#currentStreak = 0;
+      this._updateValuesInThePlayerDataArray();
+      this._displayPlayerStatistics();
+    }
+
+    setInterval(() => {
+      let second = 1000;
+      let minute = second * 60;
+      let hour = minute * 60;
+      let day = hour * 24;
+
+      let textHour = Math.floor((this.#timeUntilMidnight % day) / hour);
+      let textMinute = Math.floor((this.#timeUntilMidnight % hour) / minute);
+      let textSecond = Math.floor((this.#timeUntilMidnight % minute) / second);
+
+      document.querySelector(
+        ".statistics-modal__time"
+      ).textContent = `${this._makeNumbeTwoDigits(
+        textHour
+      )}:${this._makeNumbeTwoDigits(textMinute)}:${this._makeNumbeTwoDigits(
+        textSecond
+      )}`;
+
+      this.#timeUntilMidnight = this.#timeUntilMidnight - 1000;
+    }, 1000);
+  }
+
+  _pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray() {
+    let answer = acceptableWordList[this.#werdleNumber - 1];
+    [...answer].forEach((el) => this.#answerArray.push(el));
+  }
+
+  _displayPlayerStatistics() {
+    numberOfGamesPlayed.textContent = this.#numberOfGamesPlayed;
+    percentageOfGamesWon.textContent = this.#percentageOfGamesWon;
+    currentStreak.textContent = this.#currentStreak;
+    maxStreak.textContent = this.#maxStreak;
+  }
+
+  _updateValuesInThePlayerDataArray() {
+    this.#playerDataArray = [
+      this.#numberOfGamesPlayed,
+      this.#numberOfGamesWon,
+      this.#percentageOfGamesWon,
+      this.#currentStreak,
+      this.#maxStreak,
+      this.#werdleNumber,
+    ];
+  }
+
+  _reset() {
+    localStorage.removeItem("answer");
+    localStorage.removeItem("playerBoard");
+    localStorage.removeItem("keyboard");
+    localStorage.removeItem("gamestate");
+    localStorage.removeItem("hardModeLetters");
+    localStorage.removeItem("score");
+    allBoardTiles.forEach((tile) => {
+      tile.style.borderColor = lightGrey;
+      tile.style.animation = "";
+      tile.textContent = "";
+    });
+    allBoardTiles.forEach((tile) => {
+      tile.classList.remove("flipped");
+      tile.classList.remove("flip");
+      tile.style.backgroundColor = primaryColor;
+      tile.style.color = secondaryColor;
+      tile.style.border = "2px solid var(--grey-light)";
+    });
+    keyboardButtons.forEach((button) => {
+      button.style.color = secondaryColor;
+      if (!this.#darkThemeIsEnabled) button.style.backgroundColor = lightGrey;
+      if (this.#darkThemeIsEnabled) button.style.backgroundColor = darkGrey;
+    });
+    this.#scoreForCurrentRound = 0;
+    this.#rowIndex = 0;
+    this.#tileIndex = 0;
+    this.#answerArray = [];
+    this.#guessArray = [];
+    this.#hardModeLetterArray = [];
+    this.#playerIsOnFinalRowOfPlay = false;
+    hardModeCheckbox.disabled = false;
+    this.#theGameIsNotActive = false;
+    guessDistributionBars.forEach(
+      (bar) => (bar.style.backgroundColor = "rgb(128,128,128)")
+    );
+    timerContainer.classList.add("hidden");
+    this._pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray();
+    this._storeTheAnswerInLocalStorage();
+    this._storeTheDataForPlayerStatisticsInLocalStorage();
+  }
+
+  _disableKeyBoard() {
+    this.#keyBoardIsDisabled = true;
+    setTimeout(() => {
+      this.#keyBoardIsDisabled = false;
+    }, 2200);
+  }
 
   _checkIfHardModeCanBeActivated() {
     if (this.#rowIndex > 0) hardModeCheckbox.disabled = true;
@@ -359,11 +519,18 @@ class App {
         "--secondary-shadow",
         "#ffffff1f"
       );
-      document.documentElement.style.setProperty("--grey-light", "#3f3f3f");
-      document.documentElement.style.setProperty("--grey-dark", "#67686b");
+      document.documentElement.style.setProperty(
+        "--grey-light",
+        "rgb(63, 63, 63)"
+      );
+      document.documentElement.style.setProperty(
+        "--grey-dark",
+        "rgb(103, 104, 107)"
+      );
+      primaryColor = "#131313";
       secondaryColor = "#ffffff";
-      lightGrey = "#3f3f3f";
-      darkGrey = "#67686b";
+      lightGrey = "rgb(63, 63, 63)";
+      darkGrey = "rgb(103, 104, 107)";
       wrongLetterColor = "rgb(60, 60, 60)";
       keyboardButtons.forEach((button) => {
         button.style.color = "#ffffff";
@@ -374,22 +541,25 @@ class App {
         if (button.style.backgroundColor === "rgb(128, 128, 128)")
           button.style.backgroundColor = "rgb(60, 60, 60)";
         if (button.style.backgroundColor === "") {
-          button.style.backgroundColor = "rgb(116, 118, 120)";
+          button.style.backgroundColor = "rgb(103, 104, 107)";
         }
         if (button.style.backgroundColor === "rgb(210, 212, 217)") {
-          button.style.backgroundColor = "rgb(116, 118, 120)";
+          button.style.backgroundColor = "rgb(103, 104, 107)";
         }
       });
-      frontOfBoardTiles.forEach((tile) => {
+      allBoardTiles.forEach((tile) => {
         tile.style.borderColor = lightGrey;
       });
-      backOfBoardTiles.forEach((tile) => {
+
+      allBoardTiles.forEach((tile) => {
         if (tile.style.backgroundColor === "rgb(208, 179, 99)")
           tile.style.backgroundColor = "rgb(208, 179, 99)";
         if (tile.style.backgroundColor === "rgb(104, 168, 104)")
           tile.style.backgroundColor = "rgb(104, 168, 104)";
         if (tile.style.backgroundColor === "rgb(128, 128, 128)")
           tile.style.backgroundColor = "rgb(60, 60, 60)";
+        if (tile.style.backgroundColor === "rgb(255, 255, 255)")
+          tile.style.backgroundColor = "rgb(19, 19, 19)";
       });
     }
 
@@ -405,12 +575,19 @@ class App {
         "--secondary-shadow",
         "#0000001f"
       );
-      document.documentElement.style.setProperty("--grey-light", "#d2d4d9");
-      document.documentElement.style.setProperty("--grey-dark", "#929397");
+      document.documentElement.style.setProperty(
+        "--grey-light",
+        "rgb(210, 212, 217)"
+      );
+      document.documentElement.style.setProperty(
+        "--grey-dark",
+        "rgb(146, 147, 151)"
+      );
+      primaryColor = "#ffffff";
       secondaryColor = "#131313";
-      lightGrey = "#d2d4d9";
-      darkGrey = "#929397";
-      wrongLetterColor = "#808080";
+      lightGrey = "rgb(210, 212, 217)";
+      darkGrey = "rgb(146, 147, 151)";
+      wrongLetterColor = "rgb(128, 128, 128)";
       keyboardButtons.forEach((button) => {
         button.style.color = "#000000";
         if (button.style.backgroundColor === "rgb(128, 128, 128)")
@@ -432,22 +609,28 @@ class App {
           button.style.backgroundColor = "rgb(128, 128, 128)";
           button.style.color = "#ffffff";
         }
-        if (button.style.backgroundColor === "rgb(116, 118, 120)")
+        if (button.style.backgroundColor === "rgb(103, 104, 107)")
           button.style.backgroundColor = "rgb(210, 212, 217)";
       });
-      frontOfBoardTiles.forEach((tile) => {
+      allBoardTiles.forEach((tile) => {
         tile.style.borderColor = lightGrey;
       });
-      backOfBoardTiles.forEach((tile) => {
+      allBoardTiles.forEach((tile) => {
         if (tile.style.backgroundColor === "rgb(208, 179, 99)")
           tile.style.backgroundColor = "rgb(208, 179, 99)";
         if (tile.style.backgroundColor === "rgb(104, 168, 104)")
           tile.style.backgroundColor = "rgb(104, 168, 104)";
         if (tile.style.backgroundColor === "rgb(60, 60, 60)")
           tile.style.backgroundColor = "rgb(128, 128, 128)";
+        if (tile.style.backgroundColor === "rgb(19, 19, 19)")
+          tile.style.backgroundColor = "rgb(255, 255, 255)";
       });
     }
 
+    exampleDiv.forEach((el) => {
+      el.style.backgroundColor = primaryColor;
+      el.style.color = secondaryColor;
+    });
     this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
     this._removeOldKeyboardButtonObjectsFromTheBeginningOfTheKeyboardButtonDataArray();
     this._storeTheKeyboardDataInLocalStorage();
@@ -474,7 +657,7 @@ class App {
       );
       correctPlaceColor = "rgb(245, 121, 58)";
       wrongPlaceColor = "rgb(133, 192, 249)";
-      backOfBoardTiles.forEach((tile) => {
+      allBoardTiles.forEach((tile) => {
         if (tile.style.backgroundColor === "rgb(104, 168, 104)")
           tile.style.backgroundColor = "rgb(245, 121, 58)";
         if (tile.style.backgroundColor === "rgb(208, 179, 99)")
@@ -503,7 +686,7 @@ class App {
       );
       correctPlaceColor = "rgb(104, 168, 104)";
       wrongPlaceColor = "rgb(208, 179, 99)";
-      backOfBoardTiles.forEach((tile) => {
+      allBoardTiles.forEach((tile) => {
         if (tile.style.backgroundColor === "rgb(245, 121, 58)")
           tile.style.backgroundColor = "rgb(104, 168, 104)";
         if (tile.style.backgroundColor === "rgb(133, 192, 249)")
@@ -516,6 +699,7 @@ class App {
           button.style.backgroundColor = "rgb(208, 179, 99)";
       });
     }
+    this._updateColorsForGuessDistributionBars();
     this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
     this._removeOldKeyboardButtonObjectsFromTheBeginningOfTheKeyboardButtonDataArray();
     this._storeTheKeyboardDataInLocalStorage();
@@ -544,7 +728,7 @@ class App {
   }
 
   _animateTile() {
-    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((el, i) => {
+    this.#allTilesIncurrentRowOfPlay.forEach((el, i) => {
       if (i + 1 === this.#tileIndex) {
         el.style.animation = "pulse 0.1s linear";
         el.style.borderColor = darkGrey;
@@ -553,7 +737,7 @@ class App {
   }
 
   _removeTileBorderColor() {
-    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((el, i) => {
+    this.#allTilesIncurrentRowOfPlay.forEach((el, i) => {
       if (i === this.#tileIndex) {
         el.style.borderColor = lightGrey;
       }
@@ -562,6 +746,7 @@ class App {
   }
 
   _buildBlocks() {
+    this._displayMessage("Copied Results To Clipboard");
     let text;
     if (!this.#hardModeIsEnabled)
       text = `Nerdle Werdle ${this.#werdleNumber} ${
@@ -580,17 +765,17 @@ class App {
     let condition = (this.#rowIndex + 1) * 5 - 1;
 
     for (let i = 0; i <= condition; i++) {
-      if (backOfBoardTiles[i].style.backgroundColor === "rgb(128, 128, 128)")
+      if (allBoardTiles[i].style.backgroundColor === "rgb(128, 128, 128)")
         text = text + greySquare;
-      if (backOfBoardTiles[i].style.backgroundColor === "rgb(60, 60, 60)")
+      if (allBoardTiles[i].style.backgroundColor === "rgb(60, 60, 60)")
         text = text + blackSquare;
-      if (backOfBoardTiles[i].style.backgroundColor === "rgb(104, 168, 104)")
+      if (allBoardTiles[i].style.backgroundColor === "rgb(104, 168, 104)")
         text = text + greenSquare;
-      if (backOfBoardTiles[i].style.backgroundColor === "rgb(245, 121, 58)")
+      if (allBoardTiles[i].style.backgroundColor === "rgb(245, 121, 58)")
         text = text + orangSquare;
-      if (backOfBoardTiles[i].style.backgroundColor === "rgb(208, 179, 99)")
+      if (allBoardTiles[i].style.backgroundColor === "rgb(208, 179, 99)")
         text = text + yellowSquare;
-      if (backOfBoardTiles[i].style.backgroundColor === "rgb(133, 192, 249)")
+      if (allBoardTiles[i].style.backgroundColor === "rgb(133, 192, 249)")
         text = text + blueSquare;
 
       if (i === 4 || i === 9 || i === 14 || i === 19 || i == 24) text += "🟥";
@@ -643,90 +828,11 @@ class App {
     return (n < 10 ? "0" : "") + n;
   }
 
-  _setDateAndTime() {
-    this.#upcomingMidnight = new Date();
-    this.#upcomingMidnight.setHours(24, 0, 0, 0);
-    this.#now = new Date().setHours(23, 59, 40, 0);
-  }
-
-  _calculateTimeUntileMidnight() {
-    this.#timeUntilMidnight = this.#upcomingMidnight.getTime() - this.#now;
-  }
-
-  _countdown() {
-    this._calculateTimeUntileMidnight();
-    setInterval(() => {
-      let second = 1000;
-      let minute = second * 60;
-      let hour = minute * 60;
-      let day = hour * 24;
-
-      let textHour = Math.floor((this.#timeUntilMidnight % day) / hour);
-      let textMinute = Math.floor((this.#timeUntilMidnight % hour) / minute);
-      let textSecond = Math.floor((this.#timeUntilMidnight % minute) / second);
-
-      document.querySelector(
-        ".statistics-modal__time"
-      ).textContent = `${this._makeNumbeTwoDigits(
-        textHour
-      )}:${this._makeNumbeTwoDigits(textMinute)}:${this._makeNumbeTwoDigits(
-        textSecond
-      )}`;
-
-      this.#timeUntilMidnight = this.#timeUntilMidnight - 1000;
-      if (this.#timeUntilMidnight < 0) {
-        this.#now = new Date().getTime();
-        this.#upcomingMidnight = new Date();
-        this.#upcomingMidnight.setHours(24, 0, 0, 0);
-        this._calculateTimeUntileMidnight();
-        if (!this.#theGameIsNotActive) this.#currentStreak = 0;
-        this.#werdleNumber++;
-        this._updateValuesInThePlayerDataArray();
-        this._displayPlayerStatistics();
-        this._reset();
-        this._pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray();
-        this._storeTheAnswerInLocalStorage();
-        this._storeTheDataForPlayerStatisticsInLocalStorage();
-      }
-    }, 1000);
-  }
-
-  _reset() {
-    localStorage.removeItem("answer");
-    localStorage.removeItem("playerBoard");
-    localStorage.removeItem("keyboard");
-    localStorage.removeItem("gamestate");
-    localStorage.removeItem("hardModeLetters");
-    localStorage.removeItem("score");
-    frontOfBoardTiles.forEach((tile) => {
-      tile.style.borderColor = lightGrey;
-      tile.style.animation = "";
-      tile.textContent = "";
-    });
-    boardTileContainers.forEach((tile) => {
-      tile.classList.remove("flipped");
-      tile.classList.remove("flip");
-    });
-    keyboardButtons.forEach((button) => {
-      button.style.color = secondaryColor;
-      button.style.backgroundColor = lightGrey;
-    });
-    this.#scoreForCurrentRound = 0;
-    this.#rowIndex = 0;
-    this.#tileIndex = 0;
-    this.#answerArray = [];
-    this.#guessArray = [];
-    this.#hardModeLetterArray = [];
-    hardModeCheckbox.disabled = false;
-    this.#theGameIsNotActive = false;
-    guessDistributionBars.forEach(
-      (bar) => (bar.style.backgroundColor = wrongLetterColor)
-    );
-  }
-
   _setTheScoreForTheCurrentRound() {
     if (this.#playerGuessMatchesTheAnswer)
-      this.#scoreForCurrentRound = this.#rowIndex + 1;
+      this.#scoreForCurrentRound = this.#rowIndex;
+    if (!this.#playerGuessMatchesTheAnswer) this.#scoreForCurrentRound = null;
+    console.log(this.#scoreForCurrentRound);
   }
 
   _storeTheDataForTheScoreInLocalStorage() {
@@ -740,10 +846,10 @@ class App {
   }
 
   _increaseNumberOfGamesForASpecificScore() {
-    this.#playerScoresDataArray.forEach((el, i) => {
-      if (i === this.#rowIndex) {
-        el++;
-        this.#playerScoresDataArray.splice(i, 1, el);
+    this.#playerScoresDataArray.forEach((score, i) => {
+      if (i === this.#rowIndex - 1) {
+        score++;
+        this.#playerScoresDataArray.splice(i, 1, score);
         guessDistributionBars[i].style.backgroundColor = correctPlaceColor;
       }
     });
@@ -752,7 +858,7 @@ class App {
   _updateColorsForGuessDistributionBars() {
     if (this.#scoreForCurrentRound === 0) {
       guessDistributionBars.forEach(
-        (bar) => (bar.style.backgroundColor = wrongLetterColor)
+        (bar) => (bar.style.backgroundColor = "rgb(128, 128, 128)")
       );
       return;
     }
@@ -826,13 +932,6 @@ class App {
       this.#thereIsNoAnAnswerInTheAnswerArray = true;
   }
 
-  _pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray() {
-    this.#randomNumber = Math.floor(Math.random() * 2316) + 1;
-    let answer = acceptableWordList[this.#randomNumber];
-    [...answer].forEach((el) => this.#answerArray.push(el));
-    console.log(this.#answerArray);
-  }
-
   _storeTheAnswerInLocalStorage() {
     localStorage.setItem("answer", JSON.stringify(this.#answerArray));
   }
@@ -848,10 +947,10 @@ class App {
   }
 
   _createNewTileObjectsAndPushThemIntoTheBoardDataArray() {
-    boardTileContainers.forEach((tile, i) => {
-      let tileBackgroundColor = backOfBoardTiles[i].style.backgroundColor;
-      let tileColor = backOfBoardTiles[i].style.color;
-      let tileText = backOfBoardTiles[i].textContent;
+    allBoardTiles.forEach((tile, i) => {
+      let tileBackgroundColor = tile.style.backgroundColor;
+      let tileColor = tile.style.color;
+      let tileText = tile.textContent;
       let tileFlipStatus;
       if (tile.classList.contains("flipped")) tileFlipStatus = true;
       if (!tile.classList.contains("flipped")) tileFlipStatus = false;
@@ -870,20 +969,11 @@ class App {
   }
 
   _setTheContentForTheBoardTiles() {
-    backOfBoardTiles.forEach((tile, i) => {
+    allBoardTiles.forEach((tile, i) => {
       tile.style.backgroundColor =
         this.#playerBoardDataArray[i].tileBackgroundColor;
       tile.style.color = this.#playerBoardDataArray[i].tileColor;
       tile.textContent = this.#playerBoardDataArray[i].tileText;
-    });
-  }
-
-  _flipTheTilesThatHaveContent() {
-    boardTileContainers.forEach((tile, i) => {
-      if (this.#playerBoardDataArray[i].tileFlipStatus === true) {
-        tile.classList.add("flip");
-        tile.classList.add("flipped");
-      }
     });
   }
 
@@ -951,13 +1041,6 @@ class App {
     });
   }
 
-  _displayPlayerStatistics() {
-    numberOfGamesPlayed.textContent = this.#numberOfGamesPlayed;
-    percentageOfGamesWon.textContent = this.#percentageOfGamesWon;
-    currentStreak.textContent = this.#currentStreak;
-    maxStreak.textContent = this.#maxStreak;
-  }
-
   _displayPlayerScoreStatistics() {
     guessDistributionBarNumbers.forEach((el, i) => {
       el.textContent = this.#playerScoresDataArray[i];
@@ -974,6 +1057,7 @@ class App {
   This method runs the game whenever a letter/backspace/enter is pressed
   ******************************************************************* */
   _playTheGame(e) {
+    if (this.#keyBoardIsDisabled) return;
     if (this.#theGameIsNotActive) return;
 
     this._identifyCurrentRowOfPlay();
@@ -1001,9 +1085,10 @@ class App {
               return;
             }
           }
+          this._disableKeyBoard();
           this._checkIfPlayerGuessMatchesTheAnswer();
-          this._updateTheColorsForTheTilesAndKeyboardButtons();
           this._flipTiles();
+          this._updateTheKeyboardColors();
           // this._resetBoardTiles();
           this.#playerBoardDataArray = [];
           this._createNewTileObjectsAndPushThemIntoTheBoardDataArray();
@@ -1017,15 +1102,19 @@ class App {
             this.#numberOfGamesPlayed++;
             this.#numberOfGamesWon++;
             this.#currentStreak++;
+            this.#rowIndex++;
             this._applyJumpAnimationForTilesInCurrentRowOfPlay();
             setTimeout(() => {
-              if (this.#scoreForCurrentRound < 3)
-                this._displayMessage("Good Job Nerdle");
-              if (
-                this.#scoreForCurrentRound > 3 &&
-                this.#scoreForCurrentRound < 6
-              )
+              if (this.#scoreForCurrentRound === 1)
+                this._displayMessage("#$%@#! You Probaly Cheated You Nerdle!");
+              if (this.#scoreForCurrentRound === 2)
+                this._displayMessage("Amazing Job Nerdle");
+              if (this.#scoreForCurrentRound === 3)
+                this._displayMessage("Pretty Good Nerdle");
+              if (this.#scoreForCurrentRound === 4)
                 this._displayMessage("Not Bad Nerdle");
+              if (this.#scoreForCurrentRound === 5)
+                this._displayMessage("Close One Nerdle");
               if (this.#scoreForCurrentRound === 6)
                 this._displayMessage("Damn! You Almost F***ed Up Nerdle");
             }, 2200);
@@ -1038,16 +1127,21 @@ class App {
             this._displayPlayerScoreStatistics();
             this._updatePlayerScoreStatisticsChart();
             this.#theGameIsNotActive = true;
+            timerContainer.classList.remove("hidden");
             setTimeout(() => {
               this._toggleStatisticsModal();
             }, 3800);
-            this._buildBlocks();
             this._storeTheDataForPlayerStatisticsInLocalStorage();
             this._storeTheDataForPlayerScoreStatisticsInLocalStorage();
           }
           if (!this.#playerGuessMatchesTheAnswer) {
+            this._setTheScoreForTheCurrentRound();
+            this._storeTheDataForTheScoreInLocalStorage();
             this._checkIfPlayerIsOnFinalRow();
             if (this.#playerIsOnFinalRowOfPlay) {
+              setTimeout(() => {
+                this._displayMessage(`🤦‍♂️ ${this.#answerArray.join("")} 🤦‍♀️`);
+              }, 2200);
               this.#numberOfGamesPlayed++;
               this.#currentStreak = 0;
               this._calculateThePercentageOfGamesWon();
@@ -1056,10 +1150,10 @@ class App {
               this._displayPlayerStatistics();
               this._updatePlayerScoreStatisticsChart();
               this.#theGameIsNotActive = true;
+              timerContainer.classList.remove("hidden");
               setTimeout(() => {
                 this._toggleStatisticsModal();
               }, 3500);
-              this._buildBlocks();
               this._storeTheDataForPlayerStatisticsInLocalStorage();
             }
             this._moveToTheNextRowOfPlay();
@@ -1100,12 +1194,11 @@ class App {
   }
 
   _selectTilesInCurrentRowOfPlay() {
-    this.#frontOfAllTilesInCurrentRowOfPlay =
-      this.#currentRowOfPlay.querySelectorAll(".front");
-    this.#backOfAllTilesInCurrentRowOfPlay =
-      this.#currentRowOfPlay.querySelectorAll(".back");
-    this.#allTileContainersInCurrentRowOfPlay =
-      this.#currentRowOfPlay.querySelectorAll(".board__tile__container");
+    this.#allTilesIncurrentRowOfPlay =
+      this.#currentRowOfPlay.querySelectorAll(".board__tile");
+    this.#allTilesIncurrentRowOfPlay.forEach((tile) => {
+      tile.style.color = secondaryColor;
+    });
   }
 
   _identifyWhichKeyWasPressed(e) {
@@ -1176,46 +1269,8 @@ class App {
     }
   }
 
-  _updateTheColorsForTheTilesAndKeyboardButtons() {
-    this.#answerArrayCopy = [...this.#answerArray];
-
-    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      // Remove Any Correct Letters From Copy Array
-      if (tile.textContent === this.#answerArray[i]) {
-        this.#answerArrayCopy.splice(
-          this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
-          1
-        );
-      }
-    });
-
-    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      // Change Tile Color To Grey If It Is Not In The Correct Answer
-      if (tile.textContent !== this.#answerArray[i]) {
-        tile.style.backgroundColor = wrongLetterColor;
-        tile.style.color = "white";
-      }
-
-      // Change Tile Color To Yellow If In Wrong Place And Remove It From Copy Array
-      if (
-        this.#answerArrayCopy.includes(tile.textContent) &&
-        tile.textContent !== this.#answerArray[i]
-      ) {
-        tile.style.backgroundColor = wrongPlaceColor;
-        tile.style.color = "white";
-        this.#answerArrayCopy.splice(
-          this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
-          1
-        );
-      }
-
-      // Change Tile Color To Green If It Is In Correct Spot
-      if (tile.textContent === this.#answerArray[i]) {
-        tile.style.backgroundColor = correctPlaceColor;
-        tile.style.color = "white";
-      }
-
-      // Update the keyboard button colors based on guess
+  _updateTheKeyboardColors() {
+    this.#allTilesIncurrentRowOfPlay.forEach((tile) => {
       keyboardButtons.forEach((button) => {
         if (button.value === tile.textContent) {
           setTimeout(() => {
@@ -1231,12 +1286,111 @@ class App {
     });
   }
 
+  _flipTheTilesThatHaveContent() {
+    allBoardTiles.forEach((tile) => {
+      tile.style.backgroundColor = primaryColor;
+      tile.style.color = secondaryColor;
+    });
+
+    for (let index = 0; index < this.#rowIndex; index++) {
+      this.#answerArrayCopy = [...this.#answerArray];
+      let boardTiles = allBoardRows[index].querySelectorAll(".board__tile");
+
+      boardTiles.forEach((tile, i) => {
+        if (tile.textContent === this.#answerArray[i]) {
+          this.#answerArrayCopy.splice(
+            this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
+            1
+          );
+        }
+      });
+
+      boardTiles.forEach((tile, i) => {
+        if (tile.textContent !== this.#answerArray[i]) {
+          tile.setAttribute("color", wrongLetterColor);
+        }
+
+        if (
+          this.#answerArrayCopy.includes(tile.textContent) &&
+          tile.textContent !== this.#answerArray[i]
+        ) {
+          tile.setAttribute("color", wrongPlaceColor);
+          this.#answerArrayCopy.splice(
+            this.#answerArrayCopy.findIndex((el) => el === tile.textContent),
+            1
+          );
+        }
+
+        if (tile.textContent === this.#answerArray[i]) {
+          tile.setAttribute("color", correctPlaceColor);
+        }
+      });
+
+      boardTiles.forEach((tile, i) => {
+        tile.classList.add("flipped");
+        setTimeout(() => {
+          tile.classList.add("flip");
+        }, i * 300);
+
+        tile.addEventListener("transitionend", () => {
+          tile.classList.remove("flip");
+          tile.style.border = "none";
+          tile.style.backgroundColor = tile.getAttribute("color");
+          tile.style.color = "white";
+        });
+      });
+    }
+  }
+
   _flipTiles() {
-    this.#allTileContainersInCurrentRowOfPlay.forEach((el, i) => {
-      el.classList.add("flipped");
+    this.#answerArrayAttributes = JSON.parse(JSON.stringify(this.#answerArray));
+
+    this.#allTilesIncurrentRowOfPlay.forEach((tile, i) => {
+      if (tile.textContent === this.#answerArray[i]) {
+        this.#answerArrayAttributes.splice(
+          this.#answerArrayAttributes.findIndex(
+            (el) => el === tile.textContent
+          ),
+          1
+        );
+      }
+    });
+
+    this.#allTilesIncurrentRowOfPlay.forEach((tile, i) => {
+      if (tile.textContent !== this.#answerArray[i]) {
+        tile.setAttribute("color", wrongLetterColor);
+      }
+
+      if (
+        this.#answerArrayAttributes.includes(tile.textContent) &&
+        tile.textContent !== this.#answerArray[i]
+      ) {
+        tile.setAttribute("color", wrongPlaceColor);
+        this.#answerArrayAttributes.splice(
+          this.#answerArrayAttributes.findIndex(
+            (el) => el === tile.textContent
+          ),
+          1
+        );
+      }
+
+      if (tile.textContent === this.#answerArray[i]) {
+        tile.setAttribute("color", correctPlaceColor);
+      }
+    });
+
+    this.#allTilesIncurrentRowOfPlay.forEach((tile, i) => {
+      tile.classList.add("flipped");
       setTimeout(() => {
-        el.classList.add("flip");
+        tile.classList.add("flip");
       }, i * 300);
+      tile.addEventListener("transitionend", () => {
+        tile.classList.remove("flip");
+        tile.style.border = "none";
+
+        tile.style.backgroundColor = tile.getAttribute("color");
+        tile.style.color = "white";
+      });
     });
   }
 
@@ -1278,19 +1432,8 @@ class App {
     );
   }
 
-  _updateValuesInThePlayerDataArray() {
-    this.#playerDataArray = [
-      this.#numberOfGamesPlayed,
-      this.#numberOfGamesWon,
-      this.#percentageOfGamesWon,
-      this.#currentStreak,
-      this.#maxStreak,
-      this.#werdleNumber,
-    ];
-  }
-
   _applyJumpAnimationForTilesInCurrentRowOfPlay() {
-    this.#allTileContainersInCurrentRowOfPlay.forEach((tile, i) => {
+    this.#allTilesIncurrentRowOfPlay.forEach((tile, i) => {
       setTimeout(() => {
         tile.style.animation = `jump 0.5s ease-in-out ${i / 7}s`;
       }, 2200);
@@ -1347,10 +1490,7 @@ class App {
   }
 
   _setTheTextContentForTilesInCurrentRowOfPlay() {
-    this.#frontOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
-      tile.textContent = this.#guessArray[i];
-    });
-    this.#backOfAllTilesInCurrentRowOfPlay.forEach((tile, i) => {
+    this.#allTilesIncurrentRowOfPlay.forEach((tile, i) => {
       tile.textContent = this.#guessArray[i];
     });
   }
@@ -1370,8 +1510,16 @@ class App {
       settingsModal.classList.toggle("hidden");
       rulesModal.classList.toggle("translate-up");
       setTimeout(() => {
-        exampleDivFlips.forEach((el) => {
-          el.classList.toggle("flip");
+        exampleDiv.forEach((el, i) => {
+          el.classList.add("flip");
+          el.addEventListener("transitionend", () => {
+            el.classList.remove("flip");
+            el.style.border = "none";
+            el.style.color = "white";
+            if (i === 0) el.style.backgroundColor = correctPlaceColor;
+            if (i === 1) el.style.backgroundColor = wrongPlaceColor;
+            if (i === 2) el.style.backgroundColor = wrongLetterColor;
+          });
         });
       }, 200);
     }
@@ -1379,8 +1527,10 @@ class App {
       rulesModal.classList.toggle("translate-up");
       setTimeout(() => {
         settingsModal.classList.toggle("hidden");
-        exampleDivFlips.forEach((el) => {
-          el.classList.toggle("flip");
+        exampleDiv.forEach((el) => {
+          el.style.border = "2px solid var(--grey-dark)";
+          el.style.color = secondaryColor;
+          el.style.backgroundColor = primaryColor;
         });
       }, 200);
     }
@@ -1407,6 +1557,8 @@ class App {
     localStorage.removeItem("gamestate");
     localStorage.removeItem("playerScoreData");
     localStorage.removeItem("hardModeLetters");
+    localStorage.removeItem("score");
+    localStorage.removeItem("daysSinceLaunch");
   }
 
   _simpleReset() {
@@ -1420,6 +1572,7 @@ class App {
 }
 
 const acceptableWordList = [
+<<<<<<< HEAD
   "BEACH",
   "CHRIS",
   "DUNES",
