@@ -138,10 +138,19 @@ class App {
   #answerArrayCopy;
   #keyBoardIsDisabled;
   #answerArrayAttributes;
+  #gameLaunchTime;
+  #timeSinceGameLaunched;
+  #numberOfDaysSinceGameLaunched;
 
   constructor() {
-    this._getMidnightFromLocalStorage();
-    this._storeMidnightInLocalStorage();
+    this._getDataForPlayerStatisticsFromLocalStorage();
+    if (!this.#thereIsDataForPlayerStatistics)
+      this._setDataForPlayerStatisticsToZero();
+    if (this.#thereIsDataForPlayerStatistics)
+      this._updateDataForPlayerStatistics();
+
+    this._getDataForNumberOfDaysSinceGameLaunch();
+    this._setGameLaunchTime();
     this._countdown();
     this._getLettersForHardModeFromLocalStorage();
     this._getTheDataForTheGameStateFromLocalStorage();
@@ -157,12 +166,6 @@ class App {
     this._getTheKeyboardDataFromLocalStorage();
     this._createNewKeyboardButtonObjectsAndPushThemIntoTheKeyboardButtonDataArray();
     this._removeOldKeyboardButtonObjectsFromTheEndOfTheKeyboardButtonDataArray();
-
-    this._getDataForPlayerStatisticsFromLocalStorage();
-    if (!this.#thereIsDataForPlayerStatistics)
-      this._setDataForPlayerStatisticsToZero();
-    if (this.#thereIsDataForPlayerStatistics)
-      this._updateDataForPlayerStatistics();
 
     this._getDataForPlayerScoreStatisticsFromLocalStorage();
     if (!this.#thereISDataForPlayerScoreStatistics)
@@ -257,37 +260,63 @@ class App {
   Trial Features
   *********** */
 
-  _getMidnightFromLocalStorage() {
-    let midnight = JSON.parse(localStorage.getItem("midnight"));
-    console.log(midnight);
-    if (!midnight) {
-      console.log("no data");
-      this._setDateAndTime();
-      return;
-    }
-    console.log("yes data");
-    this.#midnight = midnight;
+  _setGameLaunchTime() {
+    this.#gameLaunchTime = new Date(2022, 4, 25, 24, 0, 0, 0);
+    this.#gameLaunchTime = this.#gameLaunchTime.getTime();
   }
 
-  _storeMidnightInLocalStorage() {
-    console.log(this.#midnight);
-    localStorage.setItem("midnight", JSON.stringify(this.#midnight));
-  }
-
-  _setDateAndTime() {
-    this.#midnight = new Date(2022, 4, 27, 24, 0, 0, 0);
-    this.#midnight.setHours(24, 0, 0, 0);
-    this.#midnight = this.#midnight.getTime();
-    console.log(this.#midnight);
+  _calculateTimeSinceGameLaunched() {
+    this.#now = new Date();
+    this.#timeSinceGameLaunched = this.#gameLaunchTime - this.#now.getTime();
   }
 
   _calculateTimeUntileMidnight() {
     this.#now = new Date();
+    this.#midnight = new Date();
+    this.#midnight.setHours(24, 0, 0, 0);
     this.#timeUntilMidnight = this.#midnight - this.#now.getTime();
   }
 
+  _getDataForNumberOfDaysSinceGameLaunch() {
+    let days = JSON.parse(localStorage.getItem("daysSinceLaunch"));
+    if (!days) return;
+    this.#numberOfDaysSinceGameLaunched = days;
+  }
+
+  _storeDataForNumberOfDaysSinceGameLaunch() {
+    localStorage.setItem(
+      "daysSinceLaunch",
+      this.#numberOfDaysSinceGameLaunched
+    );
+  }
+
   _countdown() {
-    this._calculateTimeUntileMidnight();
+    this._calculateTimeSinceGameLaunched();
+
+    if (this.#timeSinceGameLaunched < 0) {
+      let currentNumberOfDaysSinceGameLaunced = Math.ceil(
+        Math.abs(this.#timeSinceGameLaunched / 86400000)
+      );
+      console.log(this.#timeSinceGameLaunched);
+      console.log(currentNumberOfDaysSinceGameLaunced);
+      console.log(this.#numberOfDaysSinceGameLaunched);
+      if (
+        currentNumberOfDaysSinceGameLaunced -
+          this.#numberOfDaysSinceGameLaunched ===
+        1
+      )
+        this._reset();
+
+      this.#numberOfDaysSinceGameLaunched = currentNumberOfDaysSinceGameLaunced;
+      this._storeDataForNumberOfDaysSinceGameLaunch();
+
+      this.#werdleNumber = currentNumberOfDaysSinceGameLaunced;
+      this._calculateTimeUntileMidnight();
+
+      // if (!this.#theGameIsNotActive) this.#currentStreak = 0;
+      this._updateValuesInThePlayerDataArray();
+      this._displayPlayerStatistics();
+    }
 
     setInterval(() => {
       let second = 1000;
@@ -308,28 +337,30 @@ class App {
       )}`;
 
       this.#timeUntilMidnight = this.#timeUntilMidnight - 1000;
-      if (this.#timeUntilMidnight < 0) {
-        this.#now = new Date().getTime();
-        this.#midnight = new Date();
-        this.#midnight.setHours(24, 0, 0, 0);
-        this._calculateTimeUntileMidnight();
-        if (!this.#theGameIsNotActive) this.#currentStreak = 0;
-        this.#werdleNumber++;
-        this._updateValuesInThePlayerDataArray();
-        this._displayPlayerStatistics();
-        this._reset();
-        this._pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray();
-        this._storeTheAnswerInLocalStorage();
-        this._storeTheDataForPlayerStatisticsInLocalStorage();
-        console.log(this.#answerArray);
-      }
     }, 1000);
   }
 
   _pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray() {
-    if (this.#werdleNumber === undefined) this.#werdleNumber = 1;
-    let answer = acceptableWordList[this.#werdleNumber - 1];
+    let answer = acceptableWordList[this.#werdleNumber];
     [...answer].forEach((el) => this.#answerArray.push(el));
+  }
+
+  _displayPlayerStatistics() {
+    numberOfGamesPlayed.textContent = this.#numberOfGamesPlayed;
+    percentageOfGamesWon.textContent = this.#percentageOfGamesWon;
+    currentStreak.textContent = this.#currentStreak;
+    maxStreak.textContent = this.#maxStreak;
+  }
+
+  _updateValuesInThePlayerDataArray() {
+    this.#playerDataArray = [
+      this.#numberOfGamesPlayed,
+      this.#numberOfGamesWon,
+      this.#percentageOfGamesWon,
+      this.#currentStreak,
+      this.#maxStreak,
+      this.#werdleNumber,
+    ];
   }
 
   _reset() {
@@ -369,6 +400,9 @@ class App {
       (bar) => (bar.style.backgroundColor = "rgb(128,128,128)")
     );
     timerContainer.classList.add("hidden");
+    this._pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray();
+    this._storeTheAnswerInLocalStorage();
+    this._storeTheDataForPlayerStatisticsInLocalStorage();
   }
 
   _disableKeyBoard() {
@@ -1009,13 +1043,6 @@ class App {
     });
   }
 
-  _displayPlayerStatistics() {
-    numberOfGamesPlayed.textContent = this.#numberOfGamesPlayed;
-    percentageOfGamesWon.textContent = this.#percentageOfGamesWon;
-    currentStreak.textContent = this.#currentStreak;
-    maxStreak.textContent = this.#maxStreak;
-  }
-
   _displayPlayerScoreStatistics() {
     guessDistributionBarNumbers.forEach((el, i) => {
       el.textContent = this.#playerScoresDataArray[i];
@@ -1407,17 +1434,6 @@ class App {
     );
   }
 
-  _updateValuesInThePlayerDataArray() {
-    this.#playerDataArray = [
-      this.#numberOfGamesPlayed,
-      this.#numberOfGamesWon,
-      this.#percentageOfGamesWon,
-      this.#currentStreak,
-      this.#maxStreak,
-      this.#werdleNumber,
-    ];
-  }
-
   _applyJumpAnimationForTilesInCurrentRowOfPlay() {
     this.#allTilesIncurrentRowOfPlay.forEach((tile, i) => {
       setTimeout(() => {
@@ -1544,7 +1560,7 @@ class App {
     localStorage.removeItem("playerScoreData");
     localStorage.removeItem("hardModeLetters");
     localStorage.removeItem("score");
-    localStorage.removeItem("midnight");
+    localStorage.removeItem("daysSinceLaunch");
   }
 
   _simpleReset() {
