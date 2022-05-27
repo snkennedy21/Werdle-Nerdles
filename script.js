@@ -261,7 +261,7 @@ class App {
   *********** */
 
   _setGameLaunchTime() {
-    this.#gameLaunchTime = new Date(2022, 4, 25, 24, 0, 0, 0);
+    this.#gameLaunchTime = new Date(2022, 4, 26, 24, 0, 0, 0);
     this.#gameLaunchTime = this.#gameLaunchTime.getTime();
   }
 
@@ -297,9 +297,7 @@ class App {
       let currentNumberOfDaysSinceGameLaunced = Math.ceil(
         Math.abs(this.#timeSinceGameLaunched / 86400000)
       );
-      console.log(this.#timeSinceGameLaunched);
-      console.log(currentNumberOfDaysSinceGameLaunced);
-      console.log(this.#numberOfDaysSinceGameLaunched);
+      this.#werdleNumber = currentNumberOfDaysSinceGameLaunced;
       if (
         currentNumberOfDaysSinceGameLaunced -
           this.#numberOfDaysSinceGameLaunched ===
@@ -341,7 +339,7 @@ class App {
   }
 
   _pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray() {
-    let answer = acceptableWordList[this.#werdleNumber];
+    let answer = acceptableWordList[this.#werdleNumber - 1];
     [...answer].forEach((el) => this.#answerArray.push(el));
   }
 
