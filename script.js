@@ -326,6 +326,12 @@ class App {
     }, 1000);
   }
 
+  _pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray() {
+    if (this.#werdleNumber === undefined) this.#werdleNumber = 1;
+    let answer = acceptableWordList[this.#werdleNumber - 1];
+    [...answer].forEach((el) => this.#answerArray.push(el));
+  }
+
   _reset() {
     localStorage.removeItem("answer");
     localStorage.removeItem("playerBoard");
@@ -892,12 +898,6 @@ class App {
       this.#thereIsNoAnAnswerInTheAnswerArray = false;
     if (this.#answerArray.length === 0)
       this.#thereIsNoAnAnswerInTheAnswerArray = true;
-  }
-
-  _pushTheLettersOfARandomWordFromTheWordListIntoTheAnswerArray() {
-    if (this.#werdleNumber === undefined) this.#werdleNumber = 1;
-    let answer = acceptableWordList[this.#werdleNumber - 1];
-    [...answer].forEach((el) => this.#answerArray.push(el));
   }
 
   _storeTheAnswerInLocalStorage() {
