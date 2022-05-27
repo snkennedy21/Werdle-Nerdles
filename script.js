@@ -1572,8 +1572,8 @@ class App {
 }
 
 const acceptableWordList = [
-  "REBUT",
   "NOUNS",
+  "REBUT",
   "CIGAR",
   "SISSY",
   "HUMPH",
