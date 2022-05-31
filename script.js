@@ -261,7 +261,7 @@ class App {
   *********** */
 
   _setGameLaunchTime() {
-    this.#gameLaunchTime = new Date(2022, 4, 26, 24, 0, 0, 0);
+    this.#gameLaunchTime = new Date(2022, 4, 31, 24, 0, 0, 0);
     this.#gameLaunchTime = this.#gameLaunchTime.getTime();
   }
 
