@@ -762,7 +762,7 @@ class App {
     let blueSquare = "🟦";
     let greySquare = "⬜";
     let blackSquare = "⬛";
-    let condition = (this.#rowIndex + 1) * 5 - 1;
+    let condition = this.#rowIndex * 5 - 1;
 
     for (let i = 0; i <= condition; i++) {
       if (allBoardTiles[i].style.backgroundColor === "rgb(128, 128, 128)")
@@ -831,8 +831,7 @@ class App {
   _setTheScoreForTheCurrentRound() {
     if (this.#playerGuessMatchesTheAnswer)
       this.#scoreForCurrentRound = this.#rowIndex;
-    if (!this.#playerGuessMatchesTheAnswer) this.#scoreForCurrentRound = null;
-    console.log(this.#scoreForCurrentRound);
+    if (!this.#playerGuessMatchesTheAnswer) this.#scoreForCurrentRound = "X";
   }
 
   _storeTheDataForTheScoreInLocalStorage() {
