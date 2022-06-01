@@ -210,7 +210,7 @@ class App {
       timerContainer.classList.remove("hidden");
       setTimeout(() => {
         this._toggleStatisticsModal();
-      }, 1000);
+      }, 2000);
     }
 
     this._checkIfHardModeCanBeActivated();
