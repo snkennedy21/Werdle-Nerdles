@@ -261,7 +261,7 @@ class App {
   *********** */
 
   _setGameLaunchTime() {
-    this.#gameLaunchTime = new Date(2022, 4, 31, 24, 0, 0, 0);
+    this.#gameLaunchTime = new Date(2022, 5, 23, 24, 0, 0, 0);
     this.#gameLaunchTime = this.#gameLaunchTime.getTime();
   }
 
@@ -1105,17 +1105,17 @@ class App {
             this._applyJumpAnimationForTilesInCurrentRowOfPlay();
             setTimeout(() => {
               if (this.#scoreForCurrentRound === 1)
-                this._displayMessage("#$%@#! You Probaly Cheated You Nerdle!");
+                this._displayMessage("#$%@#! You Probaly Cheated!");
               if (this.#scoreForCurrentRound === 2)
-                this._displayMessage("Amazing Job Nerdle");
+                this._displayMessage("Amazing Job Baby");
               if (this.#scoreForCurrentRound === 3)
-                this._displayMessage("Pretty Good Nerdle");
+                this._displayMessage("Pretty Good Baby");
               if (this.#scoreForCurrentRound === 4)
-                this._displayMessage("Not Bad Nerdle");
+                this._displayMessage("Not Bad Baby");
               if (this.#scoreForCurrentRound === 5)
-                this._displayMessage("Close One Nerdle");
+                this._displayMessage("Close One Baby");
               if (this.#scoreForCurrentRound === 6)
-                this._displayMessage("Damn! You Almost F***ed Up Nerdle");
+                this._displayMessage("Damn! You Almost F***ed Up Baby");
             }, 2200);
             this._checkIfTheMaxStreakShouldIncrease();
             this._calculateThePercentageOfGamesWon();
@@ -1571,6 +1571,12 @@ class App {
 }
 
 const acceptableWordList = [
+  "lovey",
+  "elvis",
+  "zombs",
+  "covid",
+  "roons",
+  "heyyy",
   "aahed",
   "aalii",
   "aargh",
@@ -14579,38 +14585,25 @@ const acceptableWordList = [
 ];
 
 const answerBank = [
-  "beach",
-  "grace",
-  "kendo",
-  "dunes",
-  "point",
-  "chris",
-  "doote",
-  "sandy",
-  "daisy",
-  "katie",
-  "jetty",
-  "benny",
-  "brian",
-  "clams",
-  "chris",
-  "caleb",
-  "drunk",
-  "lizzy",
-  "henry",
-  "uncle",
   "vodka",
-  "bobby",
-  "aunts",
-  "kaela",
-  "niece",
-  "towel",
-  "ocean",
-  "kathy",
-  "gelos",
-  "james",
-  "drink",
-  "waves",
+  "pizza",
+  "lovey",
+  "sushi",
+  "roons",
+  "zombs",
+  "music",
+  "moyra",
+  "tacos",
+  "dates",
+  "floof",
+  "putsy",
+  "heyyy",
+  "covid",
+  "games",
+  "farms",
+  "elvis",
+  "shore",
+  "beach",
   "cigar",
   "rebut",
   "sissy",
